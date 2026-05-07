@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from .models import Product
+from .models import Product, Category, OrderItem, Order
 from django.contrib.auth.models import User
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    caterory = serializers.PrimaryKeyRelatedField(read_only=True)
+    category = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Product
@@ -15,3 +15,25 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email']
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'product', 'quantity', 'price']
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'user', 'created_at', 'total_price', 'items']
