@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    category = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Product

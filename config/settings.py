@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'apps.products',
     'rest_framework',
     'django_filters',
+    'drf_spectacular',
 ]
 
 REST_FRAMEWORK = {
@@ -54,6 +55,14 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Cafeteria Inteligente API',
+    'DESCRIPTION': 'Your project description',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 SIMPLE_JWT = {
