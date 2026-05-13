@@ -37,3 +37,8 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'user', 'created_at', 'total_price', 'items']
+
+
+class AddItemSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField(min_value=0)
+    quantity = serializers.IntegerField(min_value=1)

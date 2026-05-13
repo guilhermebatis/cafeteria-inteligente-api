@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets, filters
 from .models import Product, Category, Order, OrderItem
-from .serializers import ProductSerializer, CategorySerializer, OrderSerializer, OrderItemSerializer
+from .serializers import ProductSerializer, CategorySerializer, OrderSerializer, OrderItemSerializer, AddItemSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from .serializers import UserSerializer
 from rest_framework.decorators import action
-from orders.services import add_item_to_order, remove_item_from_order, update_item_quantity
+from apps.orders.services import add_item_to_order, remove_item_from_order, update_item_quantity
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -51,21 +51,31 @@ class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
 
+    def get_serializer_class(self):
+        if self.action in ['add_item', 'remove_item', 'update_item']:
+            return AddItemSerializer
+        return super().get_serializer_class()
+
     @action(detail=True, methods=['post'])
-    def add_item(self, request):
+    def add_item(self, request, pk=None):
+        serializer = AddItemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         order = self.get_object()
-        product_id = self.request.data.get('product_id')
+        product_id = serializer.validated_data.get('product_id')
         product = Product.objects.filter(id=product_id).first()
-        quantity = self.request.data.get('quantity')
+        quantity = serializer.validated_data.get('quantity')
         add_item_to_order(order, product, quantity)
-        serializer = self.get_serializer(order)
+        serializer = OrderSerializer(order)
         return Response(serializer.data)
 
     @action(detail=True, methods=['delete'])
-    def remove_item(self, request):
+    def remove_item(self, request, pk=None):
         order = self.get_object()
         product_id = self.request.data.get('product_id')
         product = Product.objects.filter(id=product_id).first()
@@ -74,7 +84,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(detail=True, methods=['patch'])
-    def update_item(self, request):
+    def update_item(self, request, pk=None):
         order = self.get_object()
         product_id = self.request.data.get('product_id')
         product = Product.objects.filter(id=product_id).first()

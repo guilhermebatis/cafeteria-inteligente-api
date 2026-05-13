@@ -16,4 +16,5 @@ urlpatterns = [
 
     # API
     path('api/', include('apps.products.urls')),
+    path('api-auth/', include('rest_framework.urls')),
 ]
