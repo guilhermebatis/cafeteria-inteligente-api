@@ -57,12 +57,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
 
-    def get_serializer_class(self):
-        if self.action in ['add_item', 'remove_item', 'update_item']:
-            return AddItemSerializer
-        return super().get_serializer_class()
-
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], serializer_class=AddItemSerializer)
     def add_item(self, request, pk=None):
         serializer = AddItemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -80,15 +75,17 @@ class OrderViewSet(viewsets.ModelViewSet):
         product_id = self.request.data.get('product_id')
         product = Product.objects.filter(id=product_id).first()
         remove_item_from_order(order, product)
-        serializer = self.get_serializer(order)
+        serializer = OrderSerializer(order)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['patch'])
+    @action(detail=True, methods=['patch'], serializer_class=AddItemSerializer)
     def update_item(self, request, pk=None):
+        serializer = AddItemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         order = self.get_object()
-        product_id = self.request.data.get('product_id')
+        product_id = serializer.validated_data['product_id']
         product = Product.objects.filter(id=product_id).first()
-        quantity = self.request.data.get('quantity')
-        update_item_quantity(order, product, quantity)
-        serializer = self.get_serializer(order)
+        update_item_quantity(
+            order, product, serializer.validated_data['quantity'])
+        serializer = OrderSerializer(order)
         return Response(serializer.data)
