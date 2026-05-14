@@ -78,7 +78,8 @@ class Ingredient(models.Model):
     stock_quantity = models.DecimalField(
         default=0, max_digits=10, decimal_places=2)
     unit = models.CharField(max_length=20, choices=UNITS)
-    minimum_stock = models.DecimalField(default=0)
+    minimum_stock = models.DecimalField(
+        default=0, decimal_places=2, max_digits=10)
     created_at = models.DateTimeField(auto_now_add=True)
 
 

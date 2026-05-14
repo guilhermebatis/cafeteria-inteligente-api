@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from rest_framework import viewsets, filters
-from .models import Product, Category, Order, OrderItem
-from .serializers import ProductSerializer, CategorySerializer, OrderSerializer, OrderItemSerializer, AddItemSerializer
+from .models import Product, Category, Order, OrderItem, Ingredient, ProductIngredient
+from .serializers import (ProductSerializer, CategorySerializer, OrderSerializer,
+                          OrderItemSerializer, AddItemSerializer, IngredientSerializer,
+                          ProductIngredientSerializer, AddIngredientSerializer)
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -9,7 +11,7 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from .serializers import UserSerializer
 from rest_framework.decorators import action
-from apps.orders.services import add_item_to_order, remove_item_from_order, update_item_quantity
+from apps.orders.services import add_item_to_order, remove_item_from_order, update_item_quantity, add_ingredient_to_product
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -25,6 +27,26 @@ class ProductViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'description']
 
     ordering_fields = ['price', 'created_at']
+
+    def get_serializer_class(self):
+        if self.action == 'add_ingredient':
+            return AddIngredientSerializer
+
+        return super().get_serializer_class()
+
+    @action(detail=True, methods=['post'])
+    def add_ingredient(self, request, pk=None):
+
+        serializer = AddIngredientSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        product = self.get_object()
+        ingredient_id = serializer.validated_data['ingredient_id']
+        ingredient = Ingredient.objects.filter(id=ingredient_id).first()
+        quantity = serializer.validated_data.get('quantity')
+        add_ingredient_to_product(product, ingredient, quantity)
+        serializer = ProductIngredientSerializer(
+            product.ingredients.all(), many=True)
+        return Response(serializer.data)
 
 
 class MeView(APIView):
@@ -89,3 +111,15 @@ class OrderViewSet(viewsets.ModelViewSet):
             order, product, serializer.validated_data['quantity'])
         serializer = OrderSerializer(order)
         return Response(serializer.data)
+
+
+class IngredientViewSet(viewsets.ModelViewSet):
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class ProductIngredientViewSet(viewsets.ModelViewSet):
+    queryset = ProductIngredient.objects.all()
+    serializer_class = ProductIngredientSerializer
+    permission_classes = [IsAuthenticated]

@@ -1,5 +1,5 @@
 from decimal import Decimal
-from apps.products.models import OrderItem, Order
+from apps.products.models import OrderItem, Order, Product, Ingredient, ProductIngredient
 
 
 def add_item_to_order(order, product, quantity):
@@ -63,3 +63,22 @@ def recalculate_order_price(order):
         total_price += item.price * item.quantity
     order.total_price = total_price
     order.save()
+
+
+def add_ingredient_to_product(product, ingredient, quantity):
+    if quantity <= 0:
+        raise ValueError("quantity must be greater than zero")
+
+    product_ingredient = product.ingredients.filter(
+        ingredient=ingredient).first()
+
+    if product_ingredient:
+        product_ingredient.quantity += quantity
+        product_ingredient.save()
+    else:
+        product_ingredient = ProductIngredient.objects.create(
+            product=product,
+            ingredient=ingredient,
+            quantity=quantity
+        )
+    return product_ingredient

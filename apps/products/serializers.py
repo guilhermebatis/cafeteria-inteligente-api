@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Category, OrderItem, Order
+from .models import Product, Category, OrderItem, Order, Ingredient, ProductIngredient
 from django.contrib.auth.models import User
 
 
@@ -41,3 +41,21 @@ class OrderSerializer(serializers.ModelSerializer):
 class AddItemSerializer(serializers.Serializer):
     product_id = serializers.IntegerField(min_value=0)
     quantity = serializers.IntegerField(min_value=1)
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = '__all__'
+
+
+class ProductIngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductIngredient
+        fields = '__all__'
+
+
+class AddIngredientSerializer(serializers.Serializer):
+    ingredient_id = serializers.IntegerField(min_value=0)
+    quantity = serializers.DecimalField(
+        min_value=0, max_digits=10, decimal_places=2)
