@@ -59,3 +59,7 @@ class AddIngredientSerializer(serializers.Serializer):
     ingredient_id = serializers.IntegerField(min_value=0)
     quantity = serializers.DecimalField(
         min_value=0, max_digits=10, decimal_places=2)
+
+
+class RemoveIngredientSerializer(serializers.Serializer):
+    ingredient_id = serializers.IntegerField(min_value=0)

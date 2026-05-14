@@ -82,3 +82,25 @@ def add_ingredient_to_product(product, ingredient, quantity):
             quantity=quantity
         )
     return product_ingredient
+
+
+def update_ingredient_to_product(product, ingredient, quantity):
+    if quantity <= 0:
+        raise ValueError("quantity must be greater than zero")
+
+    product_ingredient = product.ingredients.filter(
+        ingredient=ingredient).first()
+
+    if not product_ingredient:
+        raise ValueError("Ingredient not found in product")
+
+    product_ingredient.quantity = quantity
+    product_ingredient.save()
+    return product_ingredient
+
+
+def remove_ingredient_to_product(product, ingredient):
+    if not product.ingredients.filter(ingredient=ingredient).exists():
+        raise ValueError("Ingredient not found in product")
+
+    product.ingredients.filter(ingredient=ingredient).delete()

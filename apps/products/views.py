@@ -3,7 +3,7 @@ from rest_framework import viewsets, filters
 from .models import Product, Category, Order, OrderItem, Ingredient, ProductIngredient
 from .serializers import (ProductSerializer, CategorySerializer, OrderSerializer,
                           OrderItemSerializer, AddItemSerializer, IngredientSerializer,
-                          ProductIngredientSerializer, AddIngredientSerializer)
+                          ProductIngredientSerializer, AddIngredientSerializer, RemoveIngredientSerializer)
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -11,7 +11,8 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from .serializers import UserSerializer
 from rest_framework.decorators import action
-from apps.orders.services import add_item_to_order, remove_item_from_order, update_item_quantity, add_ingredient_to_product
+from apps.orders.services import (add_item_to_order, remove_item_from_order, update_item_quantity,
+                                  add_ingredient_to_product, update_ingredient_to_product, remove_ingredient_to_product)
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -29,14 +30,16 @@ class ProductViewSet(viewsets.ModelViewSet):
     ordering_fields = ['price', 'created_at']
 
     def get_serializer_class(self):
-        if self.action == 'add_ingredient':
+        if self.action in ['add_ingredient', 'update_ingredient']:
             return AddIngredientSerializer
+
+        if self.action == 'remove_ingredient':
+            return RemoveIngredientSerializer
 
         return super().get_serializer_class()
 
     @action(detail=True, methods=['post'])
     def add_ingredient(self, request, pk=None):
-
         serializer = AddIngredientSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         product = self.get_object()
@@ -44,6 +47,31 @@ class ProductViewSet(viewsets.ModelViewSet):
         ingredient = Ingredient.objects.filter(id=ingredient_id).first()
         quantity = serializer.validated_data.get('quantity')
         add_ingredient_to_product(product, ingredient, quantity)
+        serializer = ProductIngredientSerializer(
+            product.ingredients.all(), many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'])
+    def update_ingredient(self, request, pk=None):
+        serializer = AddIngredientSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        product = self.get_object()
+        ingredient_id = serializer.validated_data['ingredient_id']
+        ingredient = Ingredient.objects.filter(id=ingredient_id).first()
+        quantity = serializer.validated_data.get('quantity')
+        update_ingredient_to_product(product, ingredient, quantity)
+        serializer = ProductIngredientSerializer(
+            product.ingredients.all(), many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def remove_ingredient(self, request, pk=None):
+        serializer = RemoveIngredientSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        product = self.get_object()
+        ingredient_id = serializer.validated_data['ingredient_id']
+        ingredient = Ingredient.objects.filter(id=ingredient_id).first()
+        remove_ingredient_to_product(product, ingredient)
         serializer = ProductIngredientSerializer(
             product.ingredients.all(), many=True)
         return Response(serializer.data)
