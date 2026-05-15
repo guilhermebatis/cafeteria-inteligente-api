@@ -110,9 +110,11 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], serializer_class=AddItemSerializer)
     def add_item(self, request, pk=None):
+        order = self.get_object()
+        if order.is_completed:
+            raise ValueError("Cannot modify completed order")
         serializer = AddItemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        order = self.get_object()
         product_id = serializer.validated_data.get('product_id')
         product = Product.objects.filter(id=product_id).first()
         quantity = serializer.validated_data.get('quantity')
@@ -123,6 +125,8 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['delete'])
     def remove_item(self, request, pk=None):
         order = self.get_object()
+        if order.is_completed:
+            raise ValueError("Cannot modify completed order")
         product_id = self.request.data.get('product_id')
         product = Product.objects.filter(id=product_id).first()
         remove_item_from_order(order, product)
@@ -131,9 +135,11 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'], serializer_class=AddItemSerializer)
     def update_item(self, request, pk=None):
+        order = self.get_object()
+        if order.is_completed:
+            raise ValueError("Cannot modify completed order")
         serializer = AddItemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        order = self.get_object()
         product_id = serializer.validated_data['product_id']
         product = Product.objects.filter(id=product_id).first()
         update_item_quantity(
