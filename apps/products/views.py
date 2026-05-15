@@ -12,7 +12,8 @@ from django.contrib.auth.models import User
 from .serializers import UserSerializer
 from rest_framework.decorators import action
 from apps.orders.services import (add_item_to_order, remove_item_from_order, update_item_quantity,
-                                  add_ingredient_to_product, update_ingredient_to_product, remove_ingredient_to_product)
+                                  add_ingredient_to_product, update_ingredient_to_product, remove_ingredient_to_product,
+                                  finalize_order)
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -138,6 +139,13 @@ class OrderViewSet(viewsets.ModelViewSet):
         update_item_quantity(
             order, product, serializer.validated_data['quantity'])
         serializer = OrderSerializer(order)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def finalize(self, request, pk=None):
+        order = self.get_object()
+        finalize_order(order)
+        serializer = OrderSerializer(self.get_object())
         return Response(serializer.data)
 
 
