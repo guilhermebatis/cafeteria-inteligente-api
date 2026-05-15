@@ -93,3 +93,18 @@ class ProductIngredient(models.Model):
 
     class Meta:
         unique_together = ['product', 'ingredient']
+
+
+class StockMovement(models.Model):
+
+    MOVEMENT_TYPES = (
+        ('IN', 'Entry'),
+        ('OUT', 'Exit'),
+    )
+
+    ingredient = models.ForeignKey(
+        Ingredient, related_name='stock_movements', on_delete=models.CASCADE)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    movement_type = models.CharField(choices=MOVEMENT_TYPES, max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+    reason = models.CharField(max_length=225)

@@ -1,5 +1,5 @@
 from decimal import Decimal
-from apps.products.models import OrderItem, Order, Product, Ingredient, ProductIngredient
+from apps.products.models import OrderItem, Order, Product, Ingredient, ProductIngredient, StockMovement
 
 
 def add_item_to_order(order, product, quantity):
@@ -122,16 +122,22 @@ def finalize_order(order):
             else:
                 ingredient_consumption[ingredient] += consumption
 
-        # Check if all ingredients have enough stock
-        for ingredient, consumption in ingredient_consumption.items():
-            if ingredient.stock_quantity < consumption:
-                raise ValueError(
-                    f'Not enough stock for ingredient {ingredient.name}')
+    # Check if all ingredients have enough stock
+    for ingredient, consumption in ingredient_consumption.items():
+        if ingredient.stock_quantity < consumption:
+            raise ValueError(
+                f'Not enough stock for ingredient {ingredient.name}')
 
     # If all ingredients have enough stock, we can proceed to deduct the stock
     for ingredient, consumption in ingredient_consumption.items():
         ingredient.stock_quantity -= consumption
         ingredient.save()
+        StockMovement.objects.create(
+            ingredient=ingredient,
+            quantity=-consumption,
+            movement_type='OUT',
+            reason='Order Finalization'
+        )
 
     order.is_completed = True
     order.save()
