@@ -1,5 +1,6 @@
 from decimal import Decimal
 from apps.products.models import OrderItem, Order, Product, Ingredient, ProductIngredient, StockMovement
+from django.db import transaction
 
 
 def add_item_to_order(order, product, quantity):
@@ -107,37 +108,38 @@ def remove_ingredient_to_product(product, ingredient):
 
 
 def finalize_order(order):
-    if order.is_completed:
-        raise ValueError("Order is already completed")
-    ingredient_consumption = {}
-    for item in order.items.all():
-        product = item.product
+    with transaction.atomic():
+        if order.is_completed:
+            raise ValueError("Order is already completed")
+        ingredient_consumption = {}
+        for item in order.items.all():
+            product = item.product
 
-        # Accumulate total ingredient consumption for the entire order
-        for product_ingredient in product.ingredients.all():
-            ingredient = product_ingredient.ingredient
-            consumption = (product_ingredient.quantity * item.quantity)
-            if ingredient not in ingredient_consumption:
-                ingredient_consumption[ingredient] = consumption
-            else:
-                ingredient_consumption[ingredient] += consumption
+            # Accumulate total ingredient consumption for the entire order
+            for product_ingredient in product.ingredients.all():
+                ingredient = product_ingredient.ingredient
+                consumption = (product_ingredient.quantity * item.quantity)
+                if ingredient not in ingredient_consumption:
+                    ingredient_consumption[ingredient] = consumption
+                else:
+                    ingredient_consumption[ingredient] += consumption
 
-    # Check if all ingredients have enough stock
-    for ingredient, consumption in ingredient_consumption.items():
-        if ingredient.stock_quantity < consumption:
-            raise ValueError(
-                f'Not enough stock for ingredient {ingredient.name}')
+        # Check if all ingredients have enough stock
+        for ingredient, consumption in ingredient_consumption.items():
+            if ingredient.stock_quantity < consumption:
+                raise ValueError(
+                    f'Not enough stock for ingredient {ingredient.name}')
 
-    # If all ingredients have enough stock, we can proceed to deduct the stock
-    for ingredient, consumption in ingredient_consumption.items():
-        ingredient.stock_quantity -= consumption
-        ingredient.save()
-        StockMovement.objects.create(
-            ingredient=ingredient,
-            quantity=-consumption,
-            movement_type='OUT',
-            reason='Order Finalization'
-        )
+        # If all ingredients have enough stock, we can proceed to deduct the stock
+        for ingredient, consumption in ingredient_consumption.items():
+            ingredient.stock_quantity -= consumption
+            ingredient.save()
+            StockMovement.objects.create(
+                ingredient=ingredient,
+                quantity=-consumption,
+                movement_type='OUT',
+                reason='Order Finalization'
+            )
 
-    order.is_completed = True
-    order.save()
+        order.is_completed = True
+        order.save()
