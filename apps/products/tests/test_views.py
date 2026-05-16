@@ -51,3 +51,26 @@ class OrderViewSetTest(APITestCase):
         url = reverse('orders-finalize', args=[self.order.id])
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_finalize_order_insufficient_stock(self):
+        self.ingredient.stock_quantity = 1
+        self.ingredient.save()
+        add_item_to_order(self.order, self.product, 3)
+        url = reverse('orders-finalize', args=[self.order.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.order.refresh_from_db()
+        self.ingredient.refresh_from_db()
+        self.assertFalse(self.order.is_completed)
+        self.assertEqual(self.ingredient.stock_quantity, Decimal('1.00'))
+        self.assertEqual(StockMovement.objects.count(), 0)
+
+    def test_user_finalize_other_user_order(self):
+        other_user = User.objects.create_user(
+            username='other', password='123')
+        self.client.force_authenticate(user=other_user)
+        url = reverse('orders-finalize', args=[self.order.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.order.refresh_from_db()
+        self.assertFalse(self.order.is_completed)

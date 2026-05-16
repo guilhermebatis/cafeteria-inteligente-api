@@ -150,7 +150,10 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def finalize(self, request, pk=None):
         order = self.get_object()
-        finalize_order(order)
+        try:
+            finalize_order(order)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=400)
         serializer = OrderSerializer(self.get_object())
         return Response(serializer.data)
 
