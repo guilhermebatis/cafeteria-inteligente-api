@@ -3,10 +3,9 @@ from .models import Product, Category, OrderItem, Order, Ingredient, ProductIngr
 from django.contrib.auth.models import User
 
 
-class ProductSerializer(serializers.ModelSerializer):
-
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Product
+        model = Category
         fields = '__all__'
 
 
@@ -16,10 +15,44 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email']
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class AddItemSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField(min_value=0)
+    quantity = serializers.IntegerField(min_value=1)
+
+
+class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Category
+        model = Ingredient
         fields = '__all__'
+
+
+class ProductIngredientSerializer(serializers.ModelSerializer):
+
+    ingredient = IngredientSerializer(read_only=True)
+
+    class Meta:
+        model = ProductIngredient
+        exclude = ['id', 'product']
+
+
+class ProductSerializer(serializers.ModelSerializer):
+
+    category = CategorySerializer(read_only=True)
+    ingredients = ProductIngredientSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+
+class AddIngredientSerializer(serializers.Serializer):
+    ingredient_id = serializers.IntegerField(min_value=0)
+    quantity = serializers.DecimalField(
+        min_value=0, max_digits=10, decimal_places=2)
+
+
+class RemoveIngredientSerializer(serializers.Serializer):
+    ingredient_id = serializers.IntegerField(min_value=0)
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -37,30 +70,3 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ['id', 'user', 'created_at',
                   'total_price', 'items', 'is_completed']
-
-
-class AddItemSerializer(serializers.Serializer):
-    product_id = serializers.IntegerField(min_value=0)
-    quantity = serializers.IntegerField(min_value=1)
-
-
-class IngredientSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Ingredient
-        fields = '__all__'
-
-
-class ProductIngredientSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductIngredient
-        fields = '__all__'
-
-
-class AddIngredientSerializer(serializers.Serializer):
-    ingredient_id = serializers.IntegerField(min_value=0)
-    quantity = serializers.DecimalField(
-        min_value=0, max_digits=10, decimal_places=2)
-
-
-class RemoveIngredientSerializer(serializers.Serializer):
-    ingredient_id = serializers.IntegerField(min_value=0)
