@@ -51,6 +51,12 @@ class Order(models.Model):
     def __str__(self):
         return f'Order {self.id} - {self.user.username}'
 
+    def update_total_price(self):
+        total = sum(item.product.price *
+                    item.quantity for item in self.items.all())
+        self.total_price = total
+        self.save()
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(
@@ -65,6 +71,16 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f'{self.product.name} X {self.quantity}'
+
+    def save(self, *args, **kwargs):
+        self.price = self.product.price
+        super().save(*args, **kwargs)
+        self.order.update_total_price()
+
+    def delete(self, *args, **kwargs):
+        order = self.order
+        super().delete(*args, **kwargs)
+        order.update_total_price()
 
 
 class Ingredient(models.Model):
