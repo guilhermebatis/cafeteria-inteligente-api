@@ -1,9 +1,10 @@
 from django.shortcuts import render
 from rest_framework import viewsets, filters
-from .models import Product, Category, Order, OrderItem, Ingredient, ProductIngredient
+from .models import Product, Category, Order, OrderItem, Ingredient, ProductIngredient, StockMovement
 from .serializers import (ProductSerializer, CategorySerializer, OrderSerializer,
                           OrderItemSerializer, AddItemSerializer, IngredientSerializer,
-                          ProductIngredientSerializer, AddIngredientSerializer, RemoveIngredientSerializer)
+                          ProductIngredientSerializer, AddIngredientSerializer, RemoveIngredientSerializer,
+                          StockMovementSerializer)
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -14,6 +15,7 @@ from rest_framework.decorators import action
 from apps.orders.services import (add_item_to_order, remove_item_from_order, update_item_quantity,
                                   add_ingredient_to_product, update_ingredient_to_product, remove_ingredient_to_product,
                                   finalize_order)
+from drf_spectacular.utils import extend_schema
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -22,7 +24,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     filter_backends = [DjangoFilterBackend,
-                       filters.SearchFilter, filters.OrderingFilter]
+                       filters.SearchFilter, filters.OrderingFilter, filters.SearchFilter]
 
     filterset_fields = ['category', 'is_available']
 
@@ -92,7 +94,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     filter_backends = [DjangoFilterBackend,
-                       filters.SearchFilter, filters.OrderingFilter]
+                       filters.SearchFilter, filters.OrderingFilter,
+                       filters.SearchFilter]
 
     search_fields = ['name']
 
@@ -147,6 +150,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = OrderSerializer(order)
         return Response(serializer.data)
 
+    @extend_schema(request=None, responses=OrderSerializer)
     @action(detail=True, methods=['post'])
     def finalize(self, request, pk=None):
         order = self.get_object()
@@ -168,3 +172,15 @@ class ProductIngredientViewSet(viewsets.ModelViewSet):
     queryset = ProductIngredient.objects.all()
     serializer_class = ProductIngredientSerializer
     permission_classes = [IsAuthenticated]
+
+
+class StockMovementViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = StockMovement.objects.all()
+    serializer_class = StockMovementSerializer
+    permission_classes = [IsAuthenticated]
+
+    filter_backends = [DjangoFilterBackend,
+                       filters.OrderingFilter, filters.SearchFilter]
+    filterset_fields = ['movement_type', 'ingredient']
+    ordering_fields = ['created_at']
+    search_fields = ['ingredient__name']

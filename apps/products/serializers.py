@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Category, OrderItem, Order, Ingredient, ProductIngredient
+from .models import Product, Category, OrderItem, Order, Ingredient, ProductIngredient, StockMovement
 from django.contrib.auth.models import User
 
 
@@ -70,3 +70,11 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ['id', 'user', 'created_at',
                   'total_price', 'items', 'is_completed']
+
+
+class StockMovementSerializer(serializers.ModelSerializer):
+    ingredient = IngredientSerializer(read_only=True)
+
+    class Meta:
+        model = StockMovement
+        fields = '__all__'
