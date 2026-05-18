@@ -99,6 +99,9 @@ class Ingredient(models.Model):
         default=0, decimal_places=2, max_digits=10)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f'{self.name}'
+
 
 class ProductIngredient(models.Model):
     product = models.ForeignKey(
