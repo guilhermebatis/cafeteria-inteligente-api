@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 
 interface Category {
@@ -22,9 +21,10 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchProducts() {
+      const token = localStorage.getItem("access");
       const response = await fetch("http://127.0.0.1:8000/api/products/", {
         headers: {
-          Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc5MTQzMzQxLCJpYXQiOjE3NzkxMzk3NDEsImp0aSI6ImQ3ZGMyNDc0NDQ3ZTRlZDJhMDA5OThiZmRhZjNjMjVhIiwidXNlcl9pZCI6IjEifQ.gkXAuWUXgizHgoE2AHmlSFrBDAxvA_OMZ-q1GRxW6iA",
+          Authorization: `Bearer ${token}`
         },
       });
 
