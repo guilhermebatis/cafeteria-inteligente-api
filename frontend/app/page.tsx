@@ -36,6 +36,7 @@ export default function Home() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [order, setOrder] = useState<Order | null>(null);
+  const [history, setHistory] = useState<Order[]>([]);
 
   function handleLogout() {
     localStorage.removeItem("access");
@@ -119,6 +120,7 @@ export default function Home() {
   useEffect(() => {
     async function fetchProducts() {
       const token = localStorage.getItem("access");
+      fetchHistory();
 
       if (!token) return;
 
@@ -211,7 +213,29 @@ export default function Home() {
 
     setOrder(null);
 
+    await fetchHistory();
+
     alert("Pedido finalizado!");
+  }
+
+  async function fetchHistory() {
+
+    const token = localStorage.getItem("access");
+
+    const response = await fetch(
+      "http://127.0.0.1:8000/api/orders/history/",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    console.log(data);
+
+    setHistory(data);
   }
 
   return (
@@ -322,6 +346,56 @@ export default function Home() {
         >
           Finalizar Pedido
         </button>
+      </div>
+
+      <div className="mt-10">
+
+        <h2 className="text-2xl font-bold mb-4">
+          Histórico de Pedidos
+        </h2>
+
+        {history.map((order) => (
+
+          <div
+            key={order.id}
+            className="border p-4 rounded mb-4"
+          >
+
+            <h3 className="font-bold">
+              Pedido #{order.id}
+            </h3>
+
+            {order.items.map((item) => (
+
+              <div
+                key={item.id}
+                className="mt-2"
+              >
+
+                <p>
+                  {item.product.name}
+                </p>
+
+                <p>
+                  Quantidade: {item.quantity}
+                </p>
+
+                <p>
+                  Preço: R$ {item.price}
+                </p>
+
+              </div>
+
+            ))}
+
+            <p className="font-bold mt-4">
+              Total: R$ {order.total_price}
+            </p>
+
+          </div>
+
+        ))}
+
       </div>
 
     </main>

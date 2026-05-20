@@ -169,6 +169,13 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = OrderSerializer(order)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'])
+    def history(self, request, pk=None):
+        user = request.user
+        orders = Order.objects.filter(user=user, is_completed=True)
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data)
+
 
 class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
