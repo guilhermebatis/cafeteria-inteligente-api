@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -10,31 +11,110 @@ interface Category {
 
 interface Product {
   id: number;
-  name: string;
+ name: string;
   description: string;
   price: string;
   is_available: boolean;
   category: Category;
 }
 
+interface OrderItem {
+  id: number;
+  quantity: number;
+  price: string;
+  product: Product;
+}
+
+interface Order {
+  id: number;
+  total_price: string;
+  items: OrderItem[];
+}
+
 export default function Home() {
   const router = useRouter();
+
   const [products, setProducts] = useState<Product[]>([]);
+  const [order, setOrder] = useState<Order | null>(null);
 
   function handleLogout() {
-  localStorage.removeItem("access");
-  localStorage.removeItem("refresh");
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("order_id");
 
-  router.push("/login");
-}
+    router.push("/login");
+  }
+
+  async function fetchOrder() {
+    const token = localStorage.getItem("access");
+
+    const orderId = localStorage.getItem("order_id");
+
+    if (!orderId) return;
+
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/orders/${orderId}/`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    setOrder(data);
+  }
+
+  async function handleAddToCart(productId: number) {
+    const token = localStorage.getItem("access");
+
+    let orderId = localStorage.getItem("order_id");
+
+    if (!orderId) {
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/orders/",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      orderId = String(data.id);
+
+      localStorage.setItem("order_id", orderId);
+    }
+
+    await fetch(
+      `http://127.0.0.1:8000/api/orders/${orderId}/add_item/`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: productId,
+          quantity: 1,
+        }),
+      }
+    );
+
+    await fetchOrder();
+  }
 
   useEffect(() => {
     const token = localStorage.getItem("access");
 
-      if (!token) {
-        router.push("/login");
-      }
-    }, []);
+    if (!token) {
+      router.push("/login");
+    }
+  }, []);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -42,29 +122,58 @@ export default function Home() {
 
       if (!token) return;
 
-      const response = await fetch("http://127.0.0.1:8000/api/products/", {
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-      });
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/products/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await response.json();
-      console.log(data);
+
       setProducts(data);
     }
 
     fetchProducts();
+
+    fetchOrder();
   }, []);
+
+  async function handleRemoveItem(productId: number) {
+
+    const token = localStorage.getItem("access");
+
+    const orderId = localStorage.getItem("order_id");
+
+    await fetch(
+      `http://127.0.0.1:8000/api/orders/${orderId}/remove_item/`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: productId,
+        }),
+      }
+    );
+
+    await fetchOrder();
+  }
 
   return (
     <main className="p-10">
 
-        <button
-          onClick={handleLogout}
-          className="mb-6 border px-4 py-2 rounded"
-          >
-            Logout
-        </button>
+      <button
+        onClick={handleLogout}
+        className="mb-6 border px-4 py-2 rounded"
+      >
+        Logout
+      </button>
+
       <h1 className="text-3xl font-bold mb-6">
         Cafeteria Inteligente
       </h1>
@@ -88,9 +197,51 @@ export default function Home() {
             <p>
               Categoria: {product.category.name}
             </p>
+
+            <button
+              onClick={() => handleAddToCart(product.id)}
+              className="mt-4 border px-4 py-2 rounded"
+            >
+              Adicionar ao carrinho
+            </button>
           </div>
         ))}
       </div>
+
+      <div className="mt-10">
+        <h2 className="text-2xl font-bold mb-4">
+          Carrinho
+        </h2>
+
+        {order?.items.map((item) => (
+          <div
+            key={item.id}
+            className="border p-4 rounded mb-2"
+          >
+            <h3>{item.product.name}</h3>
+
+            <p>
+              Quantidade: {item.quantity}
+            </p>
+
+            <p>
+              Preço: R$ {item.price}
+            </p>
+              <button
+              onClick={() => handleRemoveItem(item.product.id)}
+              className="mt-2 border px-3 py-1 rounded"
+              >
+              Remover
+            </button>
+
+          </div>
+        ))}
+
+        <p className="font-bold mt-4">
+          Total: R$ {order?.total_price}
+        </p>
+      </div>
+
     </main>
   );
 }

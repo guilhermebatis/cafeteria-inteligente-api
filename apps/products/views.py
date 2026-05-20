@@ -19,7 +19,7 @@ from drf_spectacular.utils import extend_schema
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter(is_available=True)
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated]
 

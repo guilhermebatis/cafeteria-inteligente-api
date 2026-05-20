@@ -70,6 +70,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ['id', 'user', 'created_at',
                   'total_price', 'items', 'is_completed']
+        read_only_fields = ['user']
 
 
 class StockMovementSerializer(serializers.ModelSerializer):
