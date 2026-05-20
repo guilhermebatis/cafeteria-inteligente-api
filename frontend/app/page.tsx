@@ -11,7 +11,7 @@ interface Category {
 
 interface Product {
   id: number;
- name: string;
+  name: string;
   description: string;
   price: string;
   is_available: boolean;
@@ -141,6 +141,33 @@ export default function Home() {
     fetchOrder();
   }, []);
 
+  async function handleUpdateQuantity(
+    productId: number,
+    quantity: number
+  ) {
+
+    const token = localStorage.getItem("access");
+
+    const orderId = localStorage.getItem("order_id");
+
+    await fetch(
+      `http://127.0.0.1:8000/api/orders/${orderId}/update_item/`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: productId,
+          quantity: quantity,
+        }),
+      }
+    );
+
+    await fetchOrder();
+  }
+
   async function handleRemoveItem(productId: number) {
 
     const token = localStorage.getItem("access");
@@ -162,6 +189,29 @@ export default function Home() {
     );
 
     await fetchOrder();
+  }
+
+  async function handleCheckout() {
+
+    const token = localStorage.getItem("access");
+
+    const orderId = localStorage.getItem("order_id");
+
+    await fetch(
+      `http://127.0.0.1:8000/api/orders/${orderId}/checkout/`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    localStorage.removeItem("order_id");
+
+    setOrder(null);
+
+    alert("Pedido finalizado!");
   }
 
   return (
@@ -220,17 +270,43 @@ export default function Home() {
           >
             <h3>{item.product.name}</h3>
 
-            <p>
-              Quantidade: {item.quantity}
-            </p>
+            <div className="flex items-center gap-4 mt-2">
+
+              <button
+                onClick={() =>
+                  handleUpdateQuantity(
+                    item.product.id,
+                    item.quantity - 1
+                  )
+                }
+                className="border px-3 py-1 rounded"
+              >
+                -
+              </button>
+
+              <p>{item.quantity}</p>
+
+              <button
+                onClick={() =>
+                  handleUpdateQuantity(
+                    item.product.id,
+                    item.quantity + 1
+                  )
+                }
+                className="border px-3 py-1 rounded"
+              >
+                +
+              </button>
+
+            </div>
 
             <p>
               Preço: R$ {item.price}
             </p>
-              <button
+            <button
               onClick={() => handleRemoveItem(item.product.id)}
               className="mt-2 border px-3 py-1 rounded"
-              >
+            >
               Remover
             </button>
 
@@ -240,6 +316,12 @@ export default function Home() {
         <p className="font-bold mt-4">
           Total: R$ {order?.total_price}
         </p>
+        <button
+          onClick={handleCheckout}
+          className="mt-4 border px-4 py-2 rounded"
+        >
+          Finalizar Pedido
+        </button>
       </div>
 
     </main>

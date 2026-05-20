@@ -48,12 +48,7 @@ def update_item_quantity(order, product, quantity):
     if not item:
         raise ValueError("Item not found in order")
     item.quantity = quantity
-
-    if item.quantity <= 0:
-        item.delete()
-    else:
-        item.save()
-
+    item.save()
     recalculate_order_price(order)
     return item
 

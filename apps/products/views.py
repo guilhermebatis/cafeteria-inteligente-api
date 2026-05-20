@@ -161,6 +161,14 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = OrderSerializer(self.get_object())
         return Response(serializer.data)
 
+    @action(detail=True, methods=['post'])
+    def checkout(self, request, pk=None):
+        order = self.get_object()
+        order.is_completed = True
+        order.save()
+        serializer = OrderSerializer(order)
+        return Response(serializer.data)
+
 
 class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
