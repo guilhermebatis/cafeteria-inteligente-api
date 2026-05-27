@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Product, Category, Order, OrderItem, Ingredient, ProductIngredient, StockMovement
+from .models import (Product, Order, OrderItem, Ingredient,
+                     ProductIngredient, StockMovement)
 
 
 class ProductIngredientInline(admin.TabularInline):

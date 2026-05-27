@@ -2,34 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-interface Category {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: string;
-  is_available: boolean;
-  category: Category;
-}
-
-interface OrderItem {
-  id: number;
-  quantity: number;
-  price: string;
-  product: Product;
-}
-
-interface Order {
-  id: number;
-  total_price: string;
-  items: OrderItem[];
-}
+import ProductCard from "@/components/ProductCard";
+import Cart from "@/components/Cart";
+import OrderHistory from "@/components/OrderHistory";
 
 export default function Home() {
   const router = useRouter();
@@ -42,7 +17,6 @@ export default function Home() {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
     localStorage.removeItem("order_id");
-
     router.push("/login");
   }
 
@@ -221,6 +195,7 @@ export default function Home() {
   async function fetchHistory() {
 
     const token = localStorage.getItem("access");
+    if (!token) return;
 
     const response = await fetch(
       "http://127.0.0.1:8000/api/orders/history/",
@@ -236,6 +211,7 @@ export default function Home() {
     console.log(data);
 
     setHistory(data);
+
   }
 
   return (
@@ -253,150 +229,28 @@ export default function Home() {
       </h1>
 
       <div className="grid gap-4">
+
         {products.map((product) => (
-          <div
+
+          <ProductCard
             key={product.id}
-            className="border p-4 rounded-lg"
-          >
-            <h2 className="text-xl font-semibold">
-              {product.name}
-            </h2>
-
-            <p>{product.description}</p>
-
-            <p className="font-bold mt-2">
-              R$ {product.price}
-            </p>
-
-            <p>
-              Categoria: {product.category.name}
-            </p>
-
-            <button
-              onClick={() => handleAddToCart(product.id)}
-              className="mt-4 border px-4 py-2 rounded"
-            >
-              Adicionar ao carrinho
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-10">
-        <h2 className="text-2xl font-bold mb-4">
-          Carrinho
-        </h2>
-
-        {order?.items.map((item) => (
-          <div
-            key={item.id}
-            className="border p-4 rounded mb-2"
-          >
-            <h3>{item.product.name}</h3>
-
-            <div className="flex items-center gap-4 mt-2">
-
-              <button
-                onClick={() =>
-                  handleUpdateQuantity(
-                    item.product.id,
-                    item.quantity - 1
-                  )
-                }
-                className="border px-3 py-1 rounded"
-              >
-                -
-              </button>
-
-              <p>{item.quantity}</p>
-
-              <button
-                onClick={() =>
-                  handleUpdateQuantity(
-                    item.product.id,
-                    item.quantity + 1
-                  )
-                }
-                className="border px-3 py-1 rounded"
-              >
-                +
-              </button>
-
-            </div>
-
-            <p>
-              Preço: R$ {item.price}
-            </p>
-            <button
-              onClick={() => handleRemoveItem(item.product.id)}
-              className="mt-2 border px-3 py-1 rounded"
-            >
-              Remover
-            </button>
-
-          </div>
-        ))}
-
-        <p className="font-bold mt-4">
-          Total: R$ {order?.total_price}
-        </p>
-        <button
-          onClick={handleCheckout}
-          className="mt-4 border px-4 py-2 rounded"
-        >
-          Finalizar Pedido
-        </button>
-      </div>
-
-      <div className="mt-10">
-
-        <h2 className="text-2xl font-bold mb-4">
-          Histórico de Pedidos
-        </h2>
-
-        {history.map((order) => (
-
-          <div
-            key={order.id}
-            className="border p-4 rounded mb-4"
-          >
-
-            <h3 className="font-bold">
-              Pedido #{order.id}
-            </h3>
-
-            {order.items.map((item) => (
-
-              <div
-                key={item.id}
-                className="mt-2"
-              >
-
-                <p>
-                  {item.product.name}
-                </p>
-
-                <p>
-                  Quantidade: {item.quantity}
-                </p>
-
-                <p>
-                  Preço: R$ {item.price}
-                </p>
-
-              </div>
-
-            ))}
-
-            <p className="font-bold mt-4">
-              Total: R$ {order.total_price}
-            </p>
-
-          </div>
+            product={product}
+            onAddToCart={handleAddToCart}
+          />
 
         ))}
 
       </div>
+
+      <Cart
+        order={order}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+        onCheckout={handleCheckout}
+      />
+
+      <OrderHistory history={history} />
+
 
     </main>
   );

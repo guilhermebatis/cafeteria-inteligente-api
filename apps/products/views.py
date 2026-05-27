@@ -1,6 +1,5 @@
-from django.shortcuts import render
 from rest_framework import viewsets, filters
-from .models import Product, Category, Order, OrderItem, Ingredient, ProductIngredient, StockMovement
+from .models import Product, Category, Order, Ingredient, ProductIngredient, StockMovement
 from .serializers import (ProductSerializer, CategorySerializer, OrderSerializer,
                           OrderItemSerializer, AddItemSerializer, IngredientSerializer,
                           ProductIngredientSerializer, AddIngredientSerializer, RemoveIngredientSerializer,
@@ -9,11 +8,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.contrib.auth.models import User
 from .serializers import UserSerializer
 from rest_framework.decorators import action
-from apps.orders.services import (add_item_to_order, remove_item_from_order, update_item_quantity,
-                                  add_ingredient_to_product, update_ingredient_to_product, remove_ingredient_to_product,
+from apps.orders.services import (add_item_to_order, remove_item_from_order,
+                                  update_item_quantity, add_ingredient_to_product,
+                                  update_ingredient_to_product, remove_ingredient_to_product,
                                   finalize_order)
 from drf_spectacular.utils import extend_schema
 
@@ -24,7 +23,9 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     filter_backends = [DjangoFilterBackend,
-                       filters.SearchFilter, filters.OrderingFilter, filters.SearchFilter]
+                       filters.SearchFilter,
+                       filters.OrderingFilter,
+                       filters.SearchFilter]
 
     filterset_fields = ['category', 'is_available']
 
