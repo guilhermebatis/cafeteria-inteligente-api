@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 interface NavbarProps {
     totalItems: number;
     onLogout: () => void;
@@ -15,11 +17,30 @@ export default function Navbar({
                 Cafeteria Inteligente
             </h1>
 
-            <div className="flex items-center gap-4">
 
-                <p>
-                    Carrinho: {totalItems}
-                </p>
+
+            <div className="flex items-center gap-4">
+                <Link
+                    href="/"
+                    className="border px-4 py-2 rounded"
+                >
+                    Home
+                </Link>
+
+
+                <Link
+                    href="/cart"
+                    className="border px-4 py-2 rounded"
+                >
+                    Carrinho ({totalItems})
+                </Link>
+
+                <Link
+                    href="/history"
+                    className="border px-4 py-2 rounded"
+                >
+                    Histórico
+                </Link>
 
                 <button
                     onClick={onLogout}

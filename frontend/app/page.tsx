@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
-import Cart from "@/components/Cart";
-import OrderHistory from "@/components/OrderHistory";
 import { Product, Order } from "@/types";
 import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
@@ -87,6 +85,10 @@ export default function Home() {
 
     await fetchOrder();
 
+    window.dispatchEvent(
+      new Event("cartUpdated")
+    );
+
     toast.success("Item adicionado ao carrinho!");
   }
 
@@ -101,7 +103,6 @@ export default function Home() {
   useEffect(() => {
     async function fetchProducts() {
       const token = localStorage.getItem("access");
-      fetchHistory();
 
       if (!token) return;
 
@@ -124,139 +125,10 @@ export default function Home() {
     fetchOrder();
   }, []);
 
-  async function handleUpdateQuantity(
-    productId: number,
-    quantity: number
-  ) {
 
-    const token = localStorage.getItem("access");
-
-    const orderId = localStorage.getItem("order_id");
-
-    await fetch(
-      `http://127.0.0.1:8000/api/orders/${orderId}/update_item/`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          product_id: productId,
-          quantity: quantity,
-        }),
-      }
-    );
-
-    await fetchOrder();
-  }
-
-  async function handleRemoveItem(productId: number) {
-
-    const token = localStorage.getItem("access");
-
-    const orderId = localStorage.getItem("order_id");
-
-    await fetch(
-      `http://127.0.0.1:8000/api/orders/${orderId}/remove_item/`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          product_id: productId,
-        }),
-      }
-    );
-
-    await fetchOrder();
-    toast.success("Item removido!");
-  }
-
-  async function handleCheckout() {
-
-    try {
-
-      setIsLoading(true);
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1000)
-      );
-
-      const token = localStorage.getItem("access");
-
-      const orderId = localStorage.getItem("order_id");
-
-      await fetch(
-        `http://127.0.0.1:8000/api/orders/${orderId}/checkout/`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      localStorage.removeItem("order_id");
-
-      setOrder(null);
-
-      await fetchHistory();
-
-      setIsLoading(false);
-
-      toast.success("Pedido finalizado!");
-    }
-
-    catch (error) {
-      setIsLoading(false);
-      toast.error("Erro ao finalizar pedido.");
-    }
-
-    finally {
-
-      setIsLoading(false);
-
-    }
-  }
-
-
-  async function fetchHistory() {
-
-    const token = localStorage.getItem("access");
-    if (!token) return;
-
-    const response = await fetch(
-      "http://127.0.0.1:8000/api/orders/history/",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    console.log(data);
-
-    setHistory(data);
-
-  }
 
   return (
     <main className="p-10">
-
-      <Navbar
-        totalItems={
-          order?.items.reduce(
-            (total, item) => total + item.quantity,
-            0
-          ) || 0
-        }
-        onLogout={handleLogout}
-      />
 
 
       <div className="grid gap-4">
@@ -272,17 +144,6 @@ export default function Home() {
         ))}
 
       </div>
-
-      <Cart
-        order={order}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveItem}
-        onCheckout={handleCheckout}
-        isLoading={isLoading}
-      />
-
-      <OrderHistory history={history} />
-
 
     </main>
   );
