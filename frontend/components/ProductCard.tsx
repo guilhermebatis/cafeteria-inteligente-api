@@ -1,17 +1,5 @@
-interface Category {
-    id: number;
-    name: string;
-    slug: string;
-}
+import { Product } from "@/types";
 
-interface Product {
-    id: number;
-    name: string;
-    description: string;
-    price: string;
-    is_available: boolean;
-    category: Category;
-}
 
 interface ProductCardProps {
     product: Product;

@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import Cart from "@/components/Cart";
 import OrderHistory from "@/components/OrderHistory";
+import { Product, Order } from "@/types";
+import Navbar from "@/components/Navbar";
+import { toast } from "sonner";
 
 export default function Home() {
   const router = useRouter();
@@ -12,6 +15,8 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [order, setOrder] = useState<Order | null>(null);
   const [history, setHistory] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
 
   function handleLogout() {
     localStorage.removeItem("access");
@@ -81,6 +86,8 @@ export default function Home() {
     );
 
     await fetchOrder();
+
+    toast.success("Item adicionado ao carrinho!");
   }
 
   useEffect(() => {
@@ -165,32 +172,56 @@ export default function Home() {
     );
 
     await fetchOrder();
+    toast.success("Item removido!");
   }
 
   async function handleCheckout() {
 
-    const token = localStorage.getItem("access");
+    try {
 
-    const orderId = localStorage.getItem("order_id");
+      setIsLoading(true);
 
-    await fetch(
-      `http://127.0.0.1:8000/api/orders/${orderId}/checkout/`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1000)
+      );
 
-    localStorage.removeItem("order_id");
+      const token = localStorage.getItem("access");
 
-    setOrder(null);
+      const orderId = localStorage.getItem("order_id");
 
-    await fetchHistory();
+      await fetch(
+        `http://127.0.0.1:8000/api/orders/${orderId}/checkout/`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    alert("Pedido finalizado!");
+      localStorage.removeItem("order_id");
+
+      setOrder(null);
+
+      await fetchHistory();
+
+      setIsLoading(false);
+
+      toast.success("Pedido finalizado!");
+    }
+
+    catch (error) {
+      setIsLoading(false);
+      toast.error("Erro ao finalizar pedido.");
+    }
+
+    finally {
+
+      setIsLoading(false);
+
+    }
   }
+
 
   async function fetchHistory() {
 
@@ -217,16 +248,16 @@ export default function Home() {
   return (
     <main className="p-10">
 
-      <button
-        onClick={handleLogout}
-        className="mb-6 border px-4 py-2 rounded"
-      >
-        Logout
-      </button>
+      <Navbar
+        totalItems={
+          order?.items.reduce(
+            (total, item) => total + item.quantity,
+            0
+          ) || 0
+        }
+        onLogout={handleLogout}
+      />
 
-      <h1 className="text-3xl font-bold mb-6">
-        Cafeteria Inteligente
-      </h1>
 
       <div className="grid gap-4">
 
@@ -247,6 +278,7 @@ export default function Home() {
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
         onCheckout={handleCheckout}
+        isLoading={isLoading}
       />
 
       <OrderHistory history={history} />

@@ -1,10 +1,10 @@
-interface Category {
+export interface Category {
   id: number;
   name: string;
   slug: string;
 }
 
-interface Product {
+export interface Product {
   id: number;
   name: string;
   description: string;
@@ -13,15 +13,16 @@ interface Product {
   category: Category;
 }
 
-interface OrderItem {
+export interface OrderItem {
   id: number;
   quantity: number;
   price: string;
   product: Product;
 }
 
-interface Order {
+export interface Order {
   id: number;
   total_price: string;
   items: OrderItem[];
 }
+

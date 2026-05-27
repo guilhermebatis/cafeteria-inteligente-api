@@ -1,44 +1,15 @@
-interface Category {
-    id: number;
-    name: string;
-    slug: string;
-}
+import { Order } from "@/types";
 
-interface Product {
-    id: number;
-    name: string;
-    description: string;
-    price: string;
-    is_available: boolean;
-    category: Category;
-}
-
-interface OrderItem {
-    id: number;
-    quantity: number;
-    price: string;
-    product: Product;
-}
-
-interface Order {
-    id: number;
-    total_price: string;
-    items: OrderItem[];
-}
 
 interface CartProps {
     order: Order | null;
-
     onUpdateQuantity: (
         productId: number,
         quantity: number
     ) => void;
-
-    onRemoveItem: (
-        productId: number
-    ) => void;
-
+    onRemoveItem: (productId: number) => void;
     onCheckout: () => void;
+    isLoading: boolean;
 }
 
 export default function Cart({
@@ -46,6 +17,7 @@ export default function Cart({
     onUpdateQuantity,
     onRemoveItem,
     onCheckout,
+    isLoading,
 }: CartProps) {
 
     return (
@@ -123,7 +95,8 @@ export default function Cart({
                         onClick={onCheckout}
                         className="mt-4 border px-4 py-2 rounded"
                     >
-                        Finalizar Pedido
+
+                        {isLoading ? "Finalizando..." : "Finalizar Pedido"}
                     </button>
                 </>
             )}
