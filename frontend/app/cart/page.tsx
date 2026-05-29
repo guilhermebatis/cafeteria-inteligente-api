@@ -64,6 +64,8 @@ export default function CartPage() {
         );
 
         await fetchOrder();
+
+        toast.success("Quantidade atualizada!");
     }
 
     async function handleRemoveItem(productId: number) {
