@@ -25,6 +25,15 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
         fields = '__all__'
 
+    def validate_stock_quantity(self, value):
+
+        if value < 0:
+            raise serializers.ValidationError(
+                "Stock cannot be negative"
+            )
+
+        return value
+
 
 class ProductIngredientSerializer(serializers.ModelSerializer):
 

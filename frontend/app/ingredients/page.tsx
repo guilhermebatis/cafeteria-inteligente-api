@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface Ingredient {
     id: number;
@@ -16,6 +17,7 @@ export default function IngredientsPage() {
     const [stockQuantity, setStockQuantity] = useState(0);
     const [unit, setUnit] = useState("");
     const [minimum_stock, setMinimumStock] = useState(0);
+    const [editingId, setEditingId] = useState<number | null>(null);
 
     async function fetchIngredients() {
         const token = localStorage.getItem("access");
@@ -45,7 +47,7 @@ export default function IngredientsPage() {
 
         const token = localStorage.getItem("access");
 
-        await fetch(
+        const response = await fetch(
             "http://127.0.0.1:8000/api/ingredients/",
             {
                 method: "POST",
@@ -70,8 +72,104 @@ export default function IngredientsPage() {
         setUnit("");
         setMinimumStock(0);
 
+        if (response.ok) {
+            toast.success("Ingrediente criado com sucesso!");
+        } else {
+            toast.error("Erro ao criar ingrediente");
+        }
+
         fetchIngredients();
     }
+
+
+
+    async function handleDeleteIngredient(
+        id: number
+    ) {
+
+        const token = localStorage.getItem("access");
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/ingredients/${id}/`,
+            {
+                method: "DELETE",
+
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        if (response.ok) {
+            toast.success("Ingrediente deletado com sucesso!");
+            fetchIngredients();
+
+        } else {
+
+            toast.error("Erro ao deletar ingrediente");
+
+        }
+    }
+
+    function handleEditIngredient(ingredient: Ingredient) {
+        setEditingId(ingredient.id)
+
+        setName(ingredient.name)
+
+        setStockQuantity(ingredient.stock_quantity)
+
+        setUnit(ingredient.unit)
+
+        setMinimumStock(ingredient.minimum_stock)
+    }
+
+    async function handleUpdateIngredient(e: React.FormEvent) {
+
+        e.preventDefault();
+
+        const token = localStorage.getItem('access')
+
+        const responde = await fetch(
+            `http://127.0.0.1:8000/api/ingredients/${editingId}/`,
+
+            {
+                method: 'PATCH',
+
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+
+                body: JSON.stringify({
+                    name,
+                    unit,
+                    stock_quantity: Number(stockQuantity),
+                    minimum_stock: Number(minimum_stock),
+                }),
+
+            }
+        );
+
+
+        if (responde.ok) {
+            toast.success('Ingrediente atualizado!')
+
+            setEditingId(null);
+
+            setName("");
+            setStockQuantity(0);
+            setUnit("");
+            setMinimumStock(0);
+
+            fetchIngredients();
+        }
+
+        else {
+            toast.error('Erro ao atualizar ingrediente')
+        }
+
+    }
+
 
 
     return (
@@ -82,7 +180,9 @@ export default function IngredientsPage() {
             </h1>
 
             <form
-                onSubmit={handleAddIngredient}
+                onSubmit={editingId
+                    ? handleUpdateIngredient
+                    : handleAddIngredient}
                 className="flex flex-col gap-4 mb-10"
             >
 
@@ -154,10 +254,15 @@ export default function IngredientsPage() {
                     type="submit"
                     className="border px-4 py-2 rounded"
                 >
-                    Criar Ingrediente
+                    {
+                        editingId
+                            ? "Atualizar Ingrediente"
+                            : "Criar Ingrediente"
+                    }
                 </button>
 
             </form>
+
 
             <div className="grid gap-4">
 
@@ -179,6 +284,26 @@ export default function IngredientsPage() {
                             {" "}
                             {ingredient.unit}
                         </p>
+
+                        <button
+                            onClick={() =>
+                                handleEditIngredient(ingredient)
+                            }
+                            className="border px-3 py-1 rounded mt-2 mr-2"
+                        >
+                            Editar
+                        </button>
+
+                        <button
+                            onClick={() =>
+                                handleDeleteIngredient(
+                                    ingredient.id
+                                )
+                            }
+                            className="border px-3 py-1 rounded mt-2"
+                        >
+                            Remover
+                        </button>
 
                     </div>
 
