@@ -46,6 +46,10 @@ export default function ProductsPage() {
     const [ingredientId, setIngredientId] = useState("");
     const [ingredientQuantity, setIngredientQuantity] =
         useState("");
+    const [editingIngredientId, setEditingIngredientId] =
+        useState<number | null>(null);
+    const [editingQuantity, setEditingQuantity] =
+        useState("");
 
     async function fetchIngredients() {
 
@@ -87,6 +91,8 @@ export default function ProductsPage() {
         const data = await response.json()
 
         setProducts(data);
+
+        return data;
     }
 
 
@@ -254,6 +260,56 @@ export default function ProductsPage() {
         }
     }
 
+    async function handleUpdateIngredient() {
+
+        if (!selectedProduct) {
+            return;
+        }
+
+        const token = localStorage.getItem('access')
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/products/${selectedProduct.id}/update_ingredient/`,
+
+            {
+                method: 'PATCH',
+
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type":
+                        "application/json",
+                },
+
+                body: JSON.stringify({
+                    ingredient_id: editingIngredientId,
+                    quantity: Number(editingQuantity)
+                }),
+            }
+
+        );
+
+        if (response.ok) {
+            toast.success("Ingrediente atualizado!");
+
+            const updateProducts = await fetchProducts();
+            const updatedProduct =
+                updateProducts.find(
+                    (product: Product) =>
+                        product.id ===
+                        selectedProduct.id);
+
+            setSelectedProduct(updatedProduct);
+
+            setEditingIngredientId(null);
+
+            setEditingQuantity("");
+        }
+
+        else {
+            toast.error("Erro ao atualizar ingrediente")
+        }
+    }
+
     async function handleAddIngredientToProduct(e: React.FormEvent) {
 
         e.preventDefault();
@@ -286,7 +342,14 @@ export default function ProductsPage() {
             setIngredientId("");
             setIngredientQuantity("");
 
-            fetchProducts();
+            const updatedProducts = await fetchProducts();
+
+            const updatedProduct = updatedProducts.find(
+                (product: Product) =>
+                    product.id === selectedProduct.id
+            );
+
+            setSelectedProduct(updatedProduct);
         }
 
         else {
@@ -294,6 +357,56 @@ export default function ProductsPage() {
         }
 
     }
+
+    async function handleRemoveIngredient(
+        ingredientId: number
+    ) {
+
+        if (!selectedProduct) {
+            return;
+        }
+
+        const token = localStorage.getItem('access');
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/products/${selectedProduct.id}/remove_ingredient/`,
+            {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+
+                body: JSON.stringify({
+                    ingredient_id: ingredientId,
+                }),
+            }
+        );
+
+        if (response.ok) {
+
+            toast.success("Ingrediente removido!");
+
+            const updatedProducts =
+                await fetchProducts();
+
+            const updatedProduct =
+                updatedProducts.find(
+                    (product: Product) =>
+                        product.id === selectedProduct.id
+                );
+
+            setSelectedProduct(updatedProduct);
+
+        } else {
+
+            toast.error(
+                "Erro ao remover ingrediente"
+            );
+
+        }
+    }
+
 
 
 
@@ -554,7 +667,72 @@ export default function ProductsPage() {
                                                 {item.ingredient.unit}
                                             </span>
 
+                                            <button
+                                                onClick={() => {
+
+                                                    setEditingIngredientId(
+                                                        item.ingredient.id
+                                                    );
+
+                                                    setEditingQuantity(
+                                                        item.quantity
+                                                    );
+                                                }}
+
+                                                className="border px-2 py-1 rounded"
+                                            >
+                                                Editar
+                                            </button>
+
+                                            {editingIngredientId ===
+                                                item.ingredient.id && (
+
+                                                    <div className="flex gap-2 mt-2">
+
+                                                        <input
+                                                            type="number"
+
+                                                            value={editingQuantity}
+
+                                                            onChange={(e) =>
+                                                                setEditingQuantity(
+                                                                    e.target.value
+                                                                )
+                                                            }
+
+                                                            className="border p-1 rounded"
+                                                        />
+
+                                                        <button
+                                                            onClick={
+                                                                handleUpdateIngredient
+                                                            }
+
+                                                            className="border px-2 py-1 rounded"
+                                                        >
+                                                            Salvar
+                                                        </button>
+
+                                                    </div>
+                                                )}
+
+                                            <button
+                                                onClick={() =>
+                                                    handleRemoveIngredient(
+                                                        item.ingredient.id
+                                                    )
+                                                }
+                                                className="border px-2 py-1 rounded"
+                                            >
+                                                Remover
+                                            </button>
+
+
+
+
                                         </div>
+
+
 
                                     ))}
 
