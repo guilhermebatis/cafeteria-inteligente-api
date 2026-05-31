@@ -16,6 +16,18 @@ interface Product {
     price: string;
     is_available: boolean;
     category: Category;
+    ingredients: ProductIngredient[];
+}
+
+interface Ingredient {
+    id: number;
+    name: string;
+    unit: string;
+}
+
+interface ProductIngredient {
+    ingredient: Ingredient;
+    quantity: string;
 }
 
 
@@ -28,6 +40,31 @@ export default function ProductsPage() {
     const [categoryId, setCategoryId] = useState("");
     const [isAvailable, setIsAvailable] = useState(true);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+    const [selectedProduct, setSelectedProduct] =
+        useState<Product | null>(null);
+    const [ingredientId, setIngredientId] = useState("");
+    const [ingredientQuantity, setIngredientQuantity] =
+        useState("");
+
+    async function fetchIngredients() {
+
+        const token = localStorage.getItem("access");
+
+        const response = await fetch(
+            "http://127.0.0.1:8000/api/ingredients/",
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        const data = await response.json();
+
+        setIngredients(data);
+    }
+
 
     async function fetchProducts() {
 
@@ -77,6 +114,7 @@ export default function ProductsPage() {
 
         fetchProducts();
         fetchCategories();
+        fetchIngredients();
 
     }, []);
 
@@ -215,6 +253,49 @@ export default function ProductsPage() {
             toast.error('error ao atualizar o protudo')
         }
     }
+
+    async function handleAddIngredientToProduct(e: React.FormEvent) {
+
+        e.preventDefault();
+
+        if (!selectedProduct) return;
+
+        const token = localStorage.getItem('access');
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/products/${selectedProduct.id}/add_ingredient/`,
+
+            {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+
+                body: JSON.stringify({
+                    ingredient_id: Number(ingredientId),
+                    quantity: Number(ingredientQuantity),
+                }),
+
+            }
+        );
+
+        if (response.ok) {
+            toast.success("Ingrediente adicionado!");
+
+            setIngredientId("");
+            setIngredientQuantity("");
+
+            fetchProducts();
+        }
+
+        else {
+            toast.error("Erro ao adicionar ingrediente");
+        }
+
+    }
+
+
 
 
 
@@ -364,13 +445,131 @@ export default function ProductsPage() {
                                 Remover
                             </button>
 
+                            <button
+                                onClick={() =>
+                                    setSelectedProduct(product)
+                                }
+                                className="border px-3 py-1 rounded"
+                            >
+                                Ingredientes
+                            </button>
+
                         </div>
 
                     </div>
 
                 ))}
 
+                {selectedProduct && (
+
+                    <div className="mt-10 border p-4 rounded">
+
+                        <h2 className="text-2xl font-bold mb-4">
+                            Ingredientes de:
+                            {" "}
+                            {selectedProduct.name}
+                        </h2>
+
+                        <form
+                            onSubmit={handleAddIngredientToProduct}
+                            className="flex flex-col gap-4"
+                        >
+
+                            <select
+                                value={ingredientId}
+                                onChange={(e) =>
+                                    setIngredientId(e.target.value)
+                                }
+                                className="border p-2 rounded"
+                            >
+
+                                <option value="">
+                                    Selecione ingrediente
+                                </option>
+
+                                {ingredients.map((ingredient) => (
+
+                                    <option
+                                        key={ingredient.id}
+                                        value={ingredient.id}
+                                    >
+                                        {ingredient.name}
+                                    </option>
+
+                                ))}
+
+                            </select>
+
+                            <input
+                                type="number"
+                                placeholder="Quantidade"
+                                value={ingredientQuantity}
+                                onChange={(e) =>
+                                    setIngredientQuantity(
+                                        e.target.value
+                                    )
+                                }
+                                className="border p-2 rounded"
+                            />
+
+                            <button
+                                type="submit"
+                                className="border px-4 py-2 rounded"
+                            >
+                                Adicionar Ingrediente
+                            </button>
+
+                        </form>
+
+                        <div className="mt-6">
+
+                            <h3 className="font-bold mb-2">
+                                Receita do produto
+                            </h3>
+
+                            {selectedProduct.ingredients.length === 0 ? (
+
+                                <p>
+                                    Nenhum ingrediente adicionado
+                                </p>
+
+                            ) : (
+
+                                <div className="flex flex-col gap-2">
+
+                                    {selectedProduct.ingredients.map((item) => (
+
+                                        <div
+                                            key={item.ingredient.id}
+                                            className="border p-2 rounded flex justify-between"
+                                        >
+
+                                            <span>
+                                                {item.ingredient.name}
+                                            </span>
+
+                                            <span>
+                                                {item.quantity}
+                                                {" "}
+                                                {item.ingredient.unit}
+                                            </span>
+
+                                        </div>
+
+                                    ))}
+
+                                </div>
+
+                            )}
+
+                        </div>
+
+                    </div>
+                )}
+
             </div>
+
+
 
         </main>
     );
