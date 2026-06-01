@@ -1,7 +1,7 @@
 from rest_framework import viewsets, filters
 from .models import Product, Category, Order, Ingredient, ProductIngredient, StockMovement
 from .serializers import (ProductSerializer, CategorySerializer, OrderSerializer,
-                          OrderItemSerializer, AddItemSerializer, IngredientSerializer,
+                          AddStockSerializer, AddItemSerializer, IngredientSerializer,
                           ProductIngredientSerializer, AddIngredientSerializer, RemoveIngredientSerializer,
                           StockMovementSerializer)
 from django_filters.rest_framework import DjangoFilterBackend
@@ -182,6 +182,25 @@ class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [IsAdminUser]
+
+    @action(detail=True, methods=['post'])
+    def add_stock(self, request, pk=None):
+        serializer = AddStockSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        ingredient = self.get_object()
+        quantity = serializer.validated_data['quantity']
+        reason = serializer.validated_data['reason']
+        ingredient.stock_quantity += quantity
+        ingredient.save()
+        stock_movement = StockMovement.objects.create(
+            ingredient=ingredient,
+            quantity=quantity,
+            movement_type='IN',
+            reason=reason,
+        )
+        stock_movement.save()
+        return Response({'status': 'stock added',
+                         'new_stock': ingredient.stock_quantity})
 
 
 class ProductIngredientViewSet(viewsets.ModelViewSet):

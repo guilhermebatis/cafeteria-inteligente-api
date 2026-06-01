@@ -95,3 +95,8 @@ class StockMovementSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockMovement
         fields = '__all__'
+
+
+class AddStockSerializer(serializers.Serializer):
+    quantity = serializers.DecimalField(max_digits=10, decimal_places=2)
+    reason = serializers.CharField(max_length=255)
