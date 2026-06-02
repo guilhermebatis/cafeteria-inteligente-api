@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
+import { usePathname } from "next/navigation";
 
 interface LayoutClientProps {
     children: React.ReactNode;
@@ -12,6 +13,17 @@ export default function LayoutClient({
 }: LayoutClientProps) {
 
     const [totalItems, setTotalItems] = useState(0);
+    const pathname = usePathname();
+    const hideNavbarRoutes = [
+        "/admin",
+        "/products",
+        "/ingredients",
+        "/stock",
+    ];
+    const shouldHideNavbar =
+        hideNavbarRoutes.some((route) =>
+            pathname.startsWith(route)
+        );
 
     async function fetchCart() {
 
@@ -78,10 +90,12 @@ export default function LayoutClient({
     return (
 
         <>
-            <Navbar
-                totalItems={totalItems}
-                onLogout={handleLogout}
-            />
+            {!shouldHideNavbar && (
+                <Navbar
+                    totalItems={totalItems}
+                    onLogout={handleLogout}
+                />
+            )}
 
             {children}
         </>
