@@ -15,6 +15,7 @@ from apps.orders.services import (add_item_to_order, remove_item_from_order,
                                   update_ingredient_to_product, remove_ingredient_to_product,
                                   finalize_order)
 from drf_spectacular.utils import extend_schema
+from rest_framework import status
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -78,6 +79,19 @@ class ProductViewSet(viewsets.ModelViewSet):
         remove_ingredient_to_product(product, ingredient)
         serializer = ProductIngredientSerializer(
             product.ingredients.all(), many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def by_barcode(self, request):
+        barcode = request.query_params.get('barcode')
+        if not barcode:
+            return Response({'error': 'Barcode is required'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        product = Product.objects.filter(barcode=barcode).first()
+        if not product:
+            return Response({'error': 'Product not found'},
+                            status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(product)
         return Response(serializer.data)
 
 

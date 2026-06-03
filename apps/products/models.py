@@ -32,6 +32,7 @@ class Product(models.Model):
     is_available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    barcode = models.CharField(max_length=100, unique=True, null=True, blank=True)
 
     class Meta:
         ordering = ['name']

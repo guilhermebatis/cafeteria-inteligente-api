@@ -17,6 +17,7 @@ interface Product {
     is_available: boolean;
     category: Category;
     ingredients: ProductIngredient[];
+    barcode: string;
 }
 
 interface Ingredient {
@@ -50,6 +51,7 @@ export default function ProductsPage() {
         useState<number | null>(null);
     const [editingQuantity, setEditingQuantity] =
         useState("");
+    const [barcode, setBarcode] = useState("");
 
     async function fetchIngredients() {
 
@@ -144,7 +146,8 @@ export default function ProductsPage() {
                     description: description,
                     price: Number(price),
                     is_available: isAvailable,
-                    category_id: Number(categoryId)
+                    category_id: Number(categoryId),
+                    barcode: barcode
 
                 }),
             }
@@ -212,6 +215,8 @@ export default function ProductsPage() {
             String(product.category.id)
         )
 
+        setBarcode(product.barcode)
+
     }
 
     async function handleUpdateProduct(e: React.FormEvent) {
@@ -236,6 +241,7 @@ export default function ProductsPage() {
                     price: Number(price),
                     is_available: isAvailable,
                     category_id: Number(categoryId),
+                    barcode: barcode
                 }),
 
             }
@@ -484,6 +490,16 @@ export default function ProductsPage() {
 
                 </select>
 
+                <input
+                    type="text"
+                    placeholder="Código de barras"
+                    value={barcode}
+                    onChange={(e) =>
+                        setBarcode(e.target.value)
+                    }
+                    className="border p-2 rounded"
+                />
+
                 <label className="flex gap-2">
 
                     <input
@@ -536,6 +552,10 @@ export default function ProductsPage() {
                             Categoria:
                             {" "}
                             {product.category.name}
+                        </p>
+
+                        <p>
+                            Código: {product.barcode}
                         </p>
 
                         <div className="flex gap-2 mt-4">
