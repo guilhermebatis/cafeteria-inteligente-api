@@ -137,6 +137,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         product = Product.objects.filter(id=product_id).first()
         quantity = serializer.validated_data.get('quantity')
         add_item_to_order(order, product, quantity)
+        order.refresh_from_db()
         serializer = OrderSerializer(order)
         return Response(serializer.data)
 
@@ -148,6 +149,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         product_id = self.request.data.get('product_id')
         product = Product.objects.filter(id=product_id).first()
         remove_item_from_order(order, product)
+        order.refresh_from_db()
         serializer = OrderSerializer(order)
         return Response(serializer.data)
 
@@ -162,6 +164,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         product = Product.objects.filter(id=product_id).first()
         update_item_quantity(
             order, product, serializer.validated_data['quantity'])
+        order.refresh_from_db()
         serializer = OrderSerializer(order)
         return Response(serializer.data)
 
@@ -189,6 +192,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         user = request.user
         orders = Order.objects.filter(user=user, is_completed=True)
         serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def current(self, request):
+        user = request.user
+        order = Order.objects.filter(user=user, is_completed=False).first()
+        if not order:
+            return Response(None, status=404)
+        serializer = OrderSerializer(order)
         return Response(serializer.data)
 
 

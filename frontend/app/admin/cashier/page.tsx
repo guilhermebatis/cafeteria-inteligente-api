@@ -3,17 +3,11 @@
 import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
 
-
 interface Product {
     id: number;
     name: string;
     price: string;
     barcode: string;
-}
-
-interface CartItem {
-    product: Product;
-    quantity: number;
 }
 
 interface Order {
@@ -40,14 +34,16 @@ export default function CashierPage() {
     const [orderId, setOrderId] = useState<number | null>(null);
     const [order, setOrder] = useState<Order | null>(null);
 
-    async function fetchOrder() {
-        if (!orderId) return;
+    async function fetchOrder(orderIdParam?: number) {
+
+        const currentOrderId = orderIdParam || orderId;
+
+        if (!currentOrderId) return;
 
         const token = localStorage.getItem("access");
 
-        setLoading(true);
         const response = await fetch(
-            `http://127.0.0.1:8000/api/orders/${orderId}/`,
+            `http://127.0.0.1:8000/api/orders/${currentOrderId}/`,
             {
                 method: "GET",
                 headers: {
@@ -63,11 +59,7 @@ export default function CashierPage() {
 
         const data = await response.json();
 
-        if (loading) {
-            return <p>Carregando pedido...</p>;
-        }
-
-        setOrder(data);
+        setOrder({ ...data });
         setLoading(false);
 
     }
@@ -94,6 +86,33 @@ export default function CashierPage() {
 
         const data = await response.json();
         setOrderId(data.id);
+        await fetchOrder(data.id);
+        return data.id;
+
+    }
+
+    async function getCurrentOrder() {
+        const token = localStorage.getItem("access");
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/orders/current/`,
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        )
+
+        if (response.status === 404) {
+            await createOrder();
+            return;
+        }
+
+        const data = await response.json();
+        setOrder(data);
+        setOrderId(data.id);
+        await fetchOrder(data.id);
 
     }
 
@@ -139,7 +158,7 @@ export default function CashierPage() {
         }
 
 
-        await fetchOrder();
+        await fetchOrder(orderId!);
 
         toast.success("Produto adicionado");
 
@@ -284,13 +303,17 @@ export default function CashierPage() {
     }
 
     useEffect(() => {
-        createOrder();
+
+        getCurrentOrder();
+
     }, []);
 
     useEffect(() => {
+
         if (orderId) {
             fetchOrder();
         }
+
     }, [orderId]);
 
 
