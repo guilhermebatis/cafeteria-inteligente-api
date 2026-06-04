@@ -16,11 +16,61 @@ interface CartItem {
     quantity: number;
 }
 
+interface Order {
+    id: number;
+    user: number;
+    total_price: string;
+    is_completed: boolean;
+    items: OrderItem[];
+
+}
+
+interface OrderItem {
+    id: number;
+    product: Product;
+    quantity: number;
+    price: string;
+
+}
+
 export default function CashierPage() {
 
+    const [loading, setLoading] = useState(true);
     const [barcode, setBarcode] = useState("");
-    const [cart, setCart] = useState<CartItem[]>([]);
     const [orderId, setOrderId] = useState<number | null>(null);
+    const [order, setOrder] = useState<Order | null>(null);
+
+    async function fetchOrder() {
+        if (!orderId) return;
+
+        const token = localStorage.getItem("access");
+
+        setLoading(true);
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/orders/${orderId}/`,
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        )
+
+        if (!response.ok) {
+            toast.error("Erro ao buscar pedido");
+            return;
+        }
+
+        const data = await response.json();
+
+        if (loading) {
+            return <p>Carregando pedido...</p>;
+        }
+
+        setOrder(data);
+        setLoading(false);
+
+    }
 
     async function createOrder() {
         const token = localStorage.getItem("access");
@@ -88,87 +138,120 @@ export default function CashierPage() {
             return;
         }
 
-        setCart((prev) => {
 
-            const existingItem = prev.find(
-                (item) =>
-                    item.product.id === data.id
-            );
+        await fetchOrder();
 
-            if (existingItem) {
-
-                return prev.map((item) =>
-
-                    item.product.id === data.id
-                        ? {
-                            ...item,
-                            quantity: item.quantity + 1
-                        }
-                        : item
-                );
-            }
-
-            return [
-                ...prev,
-                {
-                    product: data,
-                    quantity: 1
-                }
-            ];
-        });
+        toast.success("Produto adicionado");
 
         setBarcode("");
-
     }
 
-    const total = cart.reduce((acc, item) => {
-
-        return (
-            acc +
-            (
-                Number(item.product.price)
-                * item.quantity
-            )
-        );
-
-    }, 0);
 
 
     async function handleRemoveItem(productId: number) {
-        setCart((prev) =>
-            prev.filter((item) =>
-                item.product.id !== productId
-            )
-        );
+        if (!orderId) return;
+
+        const token = localStorage.getItem("access");
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/orders/${orderId}/remove_item/`,
+
+            {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    product_id: productId
+                })
+            }
+        )
+
+        if (!response.ok) {
+            toast.error("Erro ao remover item");
+            return;
+        }
+
+        await fetchOrder();
     }
 
-    function handleIncreaseQuantity(productId: number) {
-        setCart((prev) =>
-            prev.map((item) =>
-                item.product.id === productId
-                    ? {
-                        ...item,
-                        quantity: item.quantity + 1
-                    }
-                    : item
-            )
+
+    async function handleIncreaseQuantity(productId: number) {
+
+        if (!orderId || !order) return;
+
+        const item = order.items.find(
+            (item) => item.product.id === productId
         );
+
+        if (!item) return;
+
+        const token = localStorage.getItem("access");
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/orders/${orderId}/update_item/`,
+
+            {
+                method: "PATCH",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    quantity: item.quantity + 1
+                })
+            }
+        )
+
+        if (!response.ok) {
+            toast.error("Erro ao atualizar item");
+            return;
+        }
+
+        await fetchOrder();
+
     }
 
 
     async function handleDecreaseQuantity(productId: number) {
-        setCart((prev) =>
-            prev.map((item) =>
-                item.product.id === productId
-                    ? {
-                        ...item,
-                        quantity: item.quantity - 1
-                    }
-                    : item
-            ).filter((item) =>
-                item.quantity > 0
-            )
+        if (!orderId || !order) return;
+
+        const item = order.items.find(
+            (item) => item.product.id === productId
         );
+
+        if (!item) return;
+
+        if (item.quantity === 1) {
+            return handleRemoveItem(productId);
+        }
+
+        const token = localStorage.getItem("access");
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/orders/${orderId}/update_item/`,
+
+            {
+                method: "PATCH",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    quantity: item.quantity - 1
+                })
+            }
+        )
+
+        if (!response.ok) {
+            toast.error("Erro ao atualizar item");
+            return;
+        }
+
+        await fetchOrder();
     }
 
     async function handleFinalizeOrder() {
@@ -193,7 +276,9 @@ export default function CashierPage() {
         }
 
         toast.success("Pedido finalizado!");
-        setCart([]);
+
+        setOrder(null);
+
         await createOrder();
 
     }
@@ -201,6 +286,12 @@ export default function CashierPage() {
     useEffect(() => {
         createOrder();
     }, []);
+
+    useEffect(() => {
+        if (orderId) {
+            fetchOrder();
+        }
+    }, [orderId]);
 
 
 
@@ -229,7 +320,7 @@ export default function CashierPage() {
 
             <div className="mt-10 flex flex-col gap-4">
 
-                {cart.map((item) => (
+                {order?.items.map((item) => (
 
                     <div
                         key={item.product.id}
@@ -313,7 +404,7 @@ export default function CashierPage() {
                     Total:
                     {" "}
 
-                    R$ {total.toFixed(2)}
+                    R$ {Number(order?.total_price || 0).toFixed(2)}
                     <br />
                     <br />
                     <button onClick={handleFinalizeOrder}>finalizar</button>

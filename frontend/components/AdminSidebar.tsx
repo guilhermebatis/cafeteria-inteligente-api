@@ -27,6 +27,13 @@ export default function AdminSidebar() {
             </Link>
 
             <Link
+                href="/admin/cashier"
+                className="border p-2 rounded"
+            >
+                Caixa
+            </Link>
+
+            <Link
                 href="/admin/products"
                 className="border p-2 rounded"
             >
@@ -51,7 +58,7 @@ export default function AdminSidebar() {
                 href="/admin/stock/history"
                 className="border p-2 rounded"
             >
-                Histórico
+                Histórico de estoque
             </Link>
 
         </aside>

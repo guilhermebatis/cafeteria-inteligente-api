@@ -106,6 +106,8 @@ def finalize_order(order):
     with transaction.atomic():
         if order.is_completed:
             raise ValueError("Order is already completed")
+        if order.items.count() == 0:
+            raise ValueError("Cannot finalize an empty order")
         ingredient_consumption = {}
         for item in order.items.all():
             product = item.product
