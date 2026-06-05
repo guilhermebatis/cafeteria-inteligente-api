@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast, Toaster } from "sonner";
 
 interface Product {
@@ -33,6 +33,9 @@ export default function CashierPage() {
     const [barcode, setBarcode] = useState("");
     const [orderId, setOrderId] = useState<number | null>(null);
     const [order, setOrder] = useState<Order | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [selectedProductId, setSelectedProductId]
+        = useState<number | null>(null);
 
     async function fetchOrder(orderIdParam?: number) {
 
@@ -163,6 +166,7 @@ export default function CashierPage() {
         toast.success("Produto adicionado");
 
         setBarcode("");
+        inputRef.current?.focus();
     }
 
 
@@ -290,6 +294,11 @@ export default function CashierPage() {
         )
 
         if (!response.ok) {
+
+            const data = await response.json();
+
+            console.log(data);
+
             toast.error("Erro ao finalizar pedido");
             return;
         }
@@ -316,6 +325,148 @@ export default function CashierPage() {
 
     }, [orderId]);
 
+    useEffect(() => {
+
+
+        function handleKeyboardShortcuts(
+            event: KeyboardEvent
+        ) {
+
+            const selectedItem = order?.items.find(
+                (item) =>
+                    item.product.id === selectedProductId
+            );
+
+            if (event.key === "F2") {
+
+                event.preventDefault();
+
+                handleFinalizeOrder();
+            }
+
+            if (event.key === "Escape") {
+
+                setBarcode("");
+            }
+
+            if (event.key === "F4") {
+
+                event.preventDefault();
+
+                inputRef.current?.focus();
+            }
+
+            if (event.key === "Delete") {
+
+                event.preventDefault();
+
+                if (selectedItem) {
+                    handleRemoveItem(
+                        selectedItem.product.id
+                    );
+                }
+            }
+
+            if (event.key === "+") {
+
+                event.preventDefault();
+
+                if (selectedItem) {
+                    handleIncreaseQuantity(
+                        selectedItem.product.id
+                    );
+                }
+            }
+
+            if (event.key === "-") {
+
+                event.preventDefault();
+
+                if (selectedItem) {
+                    handleDecreaseQuantity(
+                        selectedItem.product.id
+                    );
+                }
+            }
+
+            if (event.key === "ArrowDown") {
+
+                event.preventDefault();
+
+                if (!order?.items.length) return;
+
+                if (!selectedProductId) {
+
+                    setSelectedProductId(
+                        order.items[0].product.id
+                    );
+
+                    return;
+                }
+
+                const currentIndex =
+                    order.items.findIndex(
+                        (item) =>
+                            item.product.id === selectedProductId
+                    );
+
+                const nextIndex =
+                    currentIndex < order.items.length - 1
+                        ? currentIndex + 1
+                        : 0;
+
+                setSelectedProductId(
+                    order.items[nextIndex].product.id
+                );
+            }
+
+            if (event.key === "ArrowUp") {
+
+                event.preventDefault();
+
+                if (!order?.items.length) return;
+
+                if (!selectedProductId) {
+
+                    setSelectedProductId(
+                        order.items[0].product.id
+                    );
+
+                    return;
+                }
+
+                const currentIndex =
+                    order.items.findIndex(
+                        (item) =>
+                            item.product.id === selectedProductId
+                    );
+
+                const prevIndex =
+                    currentIndex > 0
+                        ? currentIndex - 1
+                        : order.items.length - 1;
+
+                setSelectedProductId(
+                    order.items[prevIndex].product.id
+                );
+            }
+        }
+
+        window.addEventListener(
+            "keydown",
+            handleKeyboardShortcuts
+        );
+
+        return () => {
+
+            window.removeEventListener(
+                "keydown",
+                handleKeyboardShortcuts
+            );
+
+        };
+
+    }, [order, selectedProductId]);
 
 
     return (
@@ -327,6 +478,7 @@ export default function CashierPage() {
             </h1>
 
             <input
+                ref={inputRef}
                 type="text"
                 placeholder="Código de barras"
                 value={barcode}
@@ -343,11 +495,14 @@ export default function CashierPage() {
 
             <div className="mt-10 flex flex-col gap-4">
 
-                {order?.items.map((item) => (
+                {order?.items.map((item, index) => (
 
                     <div
                         key={item.product.id}
-                        className="border p-4 rounded flex justify-between"
+                        className={`border p-4 rounded flex justify-between ${selectedProductId === item.product.id
+                            ? "border-blue-500"
+                            : ""
+                            }`}
                     >
 
                         <div>
