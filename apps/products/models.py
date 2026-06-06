@@ -42,12 +42,15 @@ class Product(models.Model):
 
 
 class Order(models.Model):
+
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='orders')
     created_at = models.DateTimeField(auto_now_add=True)
     total_price = models.DecimalField(
         max_digits=10, decimal_places=2, default=0.00)
     is_completed = models.BooleanField(default=False)
+    paid_at = models.DateTimeField(null=True, blank=True)
+
 
     def __str__(self):
         return f'Order {self.id} - {self.user.username}'
@@ -128,3 +131,30 @@ class StockMovement(models.Model):
     movement_type = models.CharField(choices=MOVEMENT_TYPES, max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
     reason = models.CharField(max_length=225)
+
+
+class Payment(models.Model):
+    class Method(models.TextChoices):
+        CASH = "CASH", "Dinheiro"
+        CREDIT_CARD = "CREDIT_CARD", "Cartão de Crédito"
+        DEBIT_CARD = "DEBIT_CARD", "Cartão de Débito"
+        PIX = "PIX", "PIX"
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING"
+        APPROVED = "APPROVED"
+        REJECTED = "REJECTED"
+
+    order = models.ForeignKey(Order,
+                              related_name='payments',
+                              on_delete=models.CASCADE)
+    method = models.CharField(max_length=20, choices=Method.choices)
+    status = models.CharField(max_length=20,
+                              choices=Status.choices,
+                              default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    external_id = models.CharField(max_length=255, null=True, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.order.id} - {self.method} - {self.status}"

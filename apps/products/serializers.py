@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Category, OrderItem, Order, Ingredient, ProductIngredient, StockMovement
+from .models import Product, Category, OrderItem, Order, Ingredient, ProductIngredient, StockMovement, Payment
 from django.contrib.auth.models import User
 
 
@@ -100,3 +100,17 @@ class StockMovementSerializer(serializers.ModelSerializer):
 class AddStockSerializer(serializers.Serializer):
     quantity = serializers.DecimalField(max_digits=10, decimal_places=2)
     reason = serializers.CharField(max_length=255)
+
+
+class PaymentInputSerializer(serializers.Serializer):
+    method = serializers.ChoiceField(choices=Payment.Method.choices)
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = "__all__"
+
+
+class ApprovePaymentSerializer(serializers.Serializer):
+    pass

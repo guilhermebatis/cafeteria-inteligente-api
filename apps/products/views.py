@@ -1,9 +1,11 @@
 from rest_framework import viewsets, filters
-from .models import Product, Category, Order, Ingredient, ProductIngredient, StockMovement
+from .models import (Product, Category, Order, Ingredient,
+                     ProductIngredient, StockMovement, Payment)
 from .serializers import (ProductSerializer, CategorySerializer, OrderSerializer,
                           AddStockSerializer, AddItemSerializer, IngredientSerializer,
                           ProductIngredientSerializer, AddIngredientSerializer, RemoveIngredientSerializer,
-                          StockMovementSerializer)
+                          StockMovementSerializer, PaymentSerializer, PaymentInputSerializer,
+                          ApprovePaymentSerializer)
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
@@ -13,9 +15,10 @@ from rest_framework.decorators import action
 from apps.orders.services import (add_item_to_order, remove_item_from_order,
                                   update_item_quantity, add_ingredient_to_product,
                                   update_ingredient_to_product, remove_ingredient_to_product,
-                                  finalize_order)
+                                  finalize_order, process_payment)
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
+from django.utils.timezone import now
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -182,10 +185,12 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def checkout(self, request, pk=None):
         order = self.get_object()
+        if order.items.count() == 0:
+            return Response({'error': 'Cannot checkout an empty order'},
+                            status=400)
         order.is_completed = True
         order.save()
-        serializer = OrderSerializer(order)
-        return Response(serializer.data)
+        return Response(OrderSerializer(order).data)
 
     @action(detail=False, methods=['get'])
     def history(self, request, pk=None):
@@ -202,6 +207,37 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Response(None, status=404)
         serializer = OrderSerializer(order)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], serializer_class=PaymentInputSerializer)
+    def pay(self, request, pk=None):
+        order = self.get_object()
+        serializer = PaymentInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            payment = process_payment(order, serializer.validated_data["method"])
+        except ValueError as e:
+            return Response({'error': str(e)}, status=400)
+        return Response(PaymentSerializer(payment).data)
+
+    @action(detail=True, methods=['post'], serializer_class=ApprovePaymentSerializer)
+    def approve_payment(self, request, pk=None):
+        order = self.get_object()
+        payment = order.payments.last()
+
+        if not payment:
+            return Response({"error": "No payment found"}, status=404)
+
+        if payment.status == "APPROVED":
+            return Response({"error": "Payment already approved"}, status=400)
+
+        try:
+            finalize_order(order)
+            payment.status = "APPROVED"
+            payment.save()
+        except ValueError as e:
+            return Response({'error': str(e)}, status=400)
+
+        return Response(PaymentSerializer(payment).data)
 
 
 class IngredientViewSet(viewsets.ModelViewSet):

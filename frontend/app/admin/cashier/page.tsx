@@ -36,6 +36,8 @@ export default function CashierPage() {
     const inputRef = useRef<HTMLInputElement>(null);
     const [selectedProductId, setSelectedProductId]
         = useState<number | null>(null);
+    const [showPaymentModal, setShowPaymentModal] =
+        useState(false);
 
     async function fetchOrder(orderIdParam?: number) {
 
@@ -311,6 +313,61 @@ export default function CashierPage() {
 
     }
 
+    async function handlePayment(method: string) {
+
+        if (!orderId) {
+            return
+        }
+
+        const token = localStorage.getItem('access')
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/orders/${orderId}/pay/`,
+
+            {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+
+                body: JSON.stringify({
+                    method
+                }),
+            }
+        );
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.error || "Erro no pagamento")
+            return
+        }
+
+        const approveResponse = await fetch(
+            `http://127.0.0.1:8000/api/orders/${orderId}/approve_payment/`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+
+        if (!response.ok) {
+            toast.error("Erro ao aprovar pagamento")
+            return
+        }
+
+        toast.success("pagamento aprovado")
+
+        setShowPaymentModal(false);
+
+        await fetchOrder();
+
+        await createOrder();
+
+    }
+
     useEffect(() => {
 
         getCurrentOrder();
@@ -341,7 +398,7 @@ export default function CashierPage() {
 
                 event.preventDefault();
 
-                handleFinalizeOrder();
+                setShowPaymentModal(true);
             }
 
             if (event.key === "Escape") {
@@ -592,6 +649,71 @@ export default function CashierPage() {
 
 
             </div>
+
+            {
+                showPaymentModal && (
+
+                    <div className="
+                    fixed inset-0
+                    bg-black/50
+                    flex items-center
+                    justify-center
+                ">
+
+                        <div className="
+                        bg-black
+                        p-10
+                        rounded
+                        flex
+                        flex-col
+                        gap-4
+                    ">
+
+                            <h2 className="text-2xl font-bold">
+                                Forma de pagamento
+                            </h2>
+
+                            <button
+                                onClick={() =>
+                                    handlePayment("CASH")
+                                }
+                                className="border p-4 rounded"
+                            >
+                                Dinheiro
+                            </button>
+
+                            <button
+                                onClick={() =>
+                                    handlePayment("PIX")
+                                }
+                                className="border p-4 rounded"
+                            >
+                                PIX
+                            </button>
+
+                            <button
+                                onClick={() =>
+                                    handlePayment("CREDIT_CARD")
+                                }
+                                className="border p-4 rounded"
+                            >
+                                Crédito
+                            </button>
+
+                            <button
+                                onClick={() =>
+                                    handlePayment("DEBIT_CARD")
+                                }
+                                className="border p-4 rounded"
+                            >
+                                Débito
+                            </button>
+
+                        </div>
+
+                    </div>
+                )
+            }
 
 
         </main>

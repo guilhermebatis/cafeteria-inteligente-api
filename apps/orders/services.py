@@ -1,6 +1,7 @@
 from decimal import Decimal
-from apps.products.models import OrderItem, Order, Product, Ingredient, ProductIngredient, StockMovement
+from apps.products.models import OrderItem, Order, Product, Ingredient, ProductIngredient, StockMovement, Payment
 from django.db import transaction
+from rest_framework.response import Response
 
 
 def add_item_to_order(order, product, quantity):
@@ -109,6 +110,7 @@ def finalize_order(order):
         if order.items.count() == 0:
             raise ValueError("Cannot finalize an empty order")
         ingredient_consumption = {}
+        payment = order.payments.last()
         for item in order.items.all():
             product = item.product
 
@@ -140,3 +142,21 @@ def finalize_order(order):
 
         order.is_completed = True
         order.save()
+
+
+def process_payment(order, method):
+    with transaction.atomic():
+        if order.items.count() == 0:
+            raise ValueError("Cannot pay an empty order")
+        if order.payments.filter(status="APPROVED").exists():
+            raise ValueError("Order already paid")
+        if order.payments.filter(status="PENDING", method=method).exists():
+            raise ValueError("There is already an active payment attempt")
+        if method not in Payment.Method.values:
+            raise ValueError("Invalid payment method")
+
+        payment = Payment.objects.create(
+            order=order,
+            method=method,
+            amount=order.total_price)
+        return payment
