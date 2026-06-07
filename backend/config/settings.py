@@ -105,10 +105,15 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'cafeteria_db',
+        'USER': 'cafeteria_user',
+        'PASSWORD': 'cafeteria_password',
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 

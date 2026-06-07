@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:16
+    container_name: cafeteria_db
+    restart: always
+
+    environment:
+      POSTGRES_DB: cafeteria_db
+      POSTGRES_USER: cafeteria_user
+      POSTGRES_PASSWORD: cafeteria_password
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: cafeteria_backend
+
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+    volumes:
+      - ./backend:/app
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    container_name: cafeteria_frontend
+
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+
