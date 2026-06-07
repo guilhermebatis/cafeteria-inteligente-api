@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminSidebar from "@/components/AdminSidebar";
 
 
 export default function AdminPage() {
@@ -11,41 +10,50 @@ export default function AdminPage() {
     const [lowStockIngredients, setLowStockIngredients] = useState<any[]>([]);
 
     async function fetchDashboardData() {
+        try {
 
-        const token = localStorage.getItem("access");
+            const token = localStorage.getItem("access");
 
-        const productsResponse = await fetch(
-            "http://127.0.0.1:8000/api/products/",
+            const productsResponse = await fetch(
+                "http://127.0.0.1:8000/api/products/",
 
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
-        const igredientsResponse = await fetch(
-            "http://127.0.0.1:8000/api/ingredients/",
+            const igredientsresponse = await fetch(
+                "http://127.0.0.1:8000/api/ingredients/",
 
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
 
-        const productsData = await productsResponse.json();
-        setProductsCount(productsData.length);
+            const productsData = await productsResponse.json();
+            const ingredientsData = await igredientsresponse.json();
 
-        const ingredientsData = await igredientsResponse.json();
-        setIngredientsCount(ingredientsData.length);
+            setProductsCount(productsData.length);
+            setIngredientsCount(ingredientsData.length);
 
-        const lowStock = ingredientsData.filter(
-            (ingredient: any) =>
-                ingredient.stock_quantity < ingredient.minimum_stock);
+            const lowStock = ingredientsData.filter(
+                (ingredient: any) =>
+                    ingredient.stock_quantity < ingredient.minimum_stock);
 
-        setLowStockIngredients(lowStock);
+            setLowStockIngredients(lowStock);
+
+        } catch (error) {
+
+            console.error("Erro ao buscar dashboard:", error);
+
+        }
+
+
     }
 
     useEffect(() => {
@@ -53,7 +61,6 @@ export default function AdminPage() {
         fetchDashboardData();
 
     }, []);
-
 
 
 
@@ -143,4 +150,3 @@ export default function AdminPage() {
         </main>
     );
 }
-

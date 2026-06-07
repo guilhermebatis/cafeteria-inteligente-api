@@ -48,6 +48,13 @@ export default function AdminSidebar() {
             </Link>
 
             <Link
+                href="/admin/category"
+                className="border p-2 rounded"
+            >
+                Categorias
+            </Link>
+
+            <Link
                 href="/admin/stock"
                 className="border p-2 rounded"
             >
