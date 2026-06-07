@@ -117,7 +117,7 @@ export default function Home() {
 
       const data = await response.json();
 
-      setProducts(data);
+      setProducts(data.results || []);
     }
 
     fetchProducts();

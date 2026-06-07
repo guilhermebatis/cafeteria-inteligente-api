@@ -76,6 +76,7 @@ export default function ProductsPage() {
 
         const token = localStorage.getItem('access')
 
+
         const response = await fetch(
             "http://127.0.0.1:8000/api/products/",
             {
@@ -87,14 +88,14 @@ export default function ProductsPage() {
 
         if (!response.ok) {
             toast.error("Erro ao buscar produtos");
-            return;
+            return [];
         }
 
         const data = await response.json()
 
         setProducts(data);
 
-        return data;
+        return data || [];
     }
 
 
