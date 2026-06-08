@@ -10,21 +10,14 @@ interface Category {
 }
 
 
-
 export default function () {
 
     const [categories, setCategories] = useState<Category[]>([]);
-    const [name, setname] = useState("")
-    const [slug, setslug] = useState("")
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [name, setName] = useState("")
+    const [slug, setSlug] = useState("")
 
-    function normalizeData(data: any) {
-        if (Array.isArray(data)) return data;
-        if (Array.isArray(data.results)) return data.results;
-        return [];
-    }
-
-
-    async function fechtCategory() {
+    async function fetchCategory() {
 
         const token = localStorage.getItem('access')
 
@@ -46,7 +39,7 @@ export default function () {
 
     useEffect(() => {
 
-        fechtCategory();
+        fetchCategory();
 
     }, []);
 
@@ -72,8 +65,8 @@ export default function () {
             }
         );
 
-        setname("")
-        setslug("")
+        setName("")
+        setSlug("")
 
         if (response.ok) {
             toast.success("categoria adicionada com sucesso")
@@ -81,19 +74,85 @@ export default function () {
             toast.error("error ao adicionar a categoria")
         }
 
-        fechtCategory();
+        fetchCategory();
+    }
+
+    async function handleDeleteCategory(id: Number) {
+
+        const token = localStorage.getItem('access')
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/categories/${id}/`,
+
+            {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            }
+        );
+
+        if (response.ok) {
+            toast.success('categoria deletado com sucesso')
+            fetchCategory()
+        } else {
+            toast.error("error ao remover categoria")
+
+        }
+    }
+
+    function handleEditCategory(category: Category) {
+
+        setEditingId(category.id)
+        setName(category.name)
+        setSlug(category.slug)
+    }
+
+    async function handleUpdateCategory(e: React.FormEvent) {
+        e.preventDefault();
+
+        const token = localStorage.getItem('access')
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/categories/${editingId}/`,
+            {
+                method: 'PATCH',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    name,
+                    slug,
+                })
+            }
+        );
+
+        if (response.ok) {
+            toast.success('categoria atualizada com sucesso')
+            setEditingId(null)
+            setName('')
+            setSlug('')
+            fetchCategory()
+        } else {
+            toast.error('error ao atualizar a categoria')
+        }
     }
 
     return (
 
         <main className="p-10">
 
-            <h1 className="text-4xl font-bold mb-10">
+            <h1 className="text-3xl font-bold mb-6">
                 Categorias
             </h1>
 
             <form
-                onSubmit={handleAddCategory}
+                onSubmit={
+                    editingId !== null
+                        ? handleUpdateCategory
+                        : handleAddCategory
+                }
                 className="flex flex-col gap-4 mb-10"
             >
 
@@ -101,43 +160,69 @@ export default function () {
                     type="text"
                     placeholder="Nome da categoria"
                     value={name}
-                    onChange={(e) => setname(e.target.value)}
-                    className="border p-3 rounded"
+                    onChange={(e) =>
+                        setName(e.target.value)
+                    }
+                    className="border p-2 rounded"
                 />
 
                 <input
                     type="text"
                     placeholder="Slug"
                     value={slug}
-                    onChange={(e) => setslug(e.target.value)}
-                    className="border p-3 rounded"
+                    onChange={(e) =>
+                        setSlug(e.target.value)
+                    }
+                    className="border p-2 rounded"
                 />
 
                 <button
                     type="submit"
-                    className="bg-black text-white p-3 rounded"
+                    className="border px-4 py-2 rounded"
                 >
-                    Adicionar Categoria
+                    {
+                        editingId !== null
+                            ? "Atualizar Categoria"
+                            : "Criar Categoria"
+                    }
                 </button>
 
             </form>
 
-            <div className="flex flex-col gap-4">
+            <div className="grid gap-4">
 
-                {categories.map((item) => (
+                {categories.map((category) => (
 
                     <div
-                        key={item.id}
+                        key={category.id}
                         className="border p-4 rounded"
                     >
 
-                        <h2 className="text-xl font-bold">
-                            {item.name}
+                        <h2 className="font-bold">
+                            {category.name}
                         </h2>
 
                         <p className="text-gray-500">
-                            {item.slug}
+                            {category.slug}
                         </p>
+
+                        <button
+                            onClick={() =>
+                                handleEditCategory(category)
+                            }
+                            className="border px-3 py-1 rounded mt-2 mr-2"
+                        >
+                            Editar
+                        </button>
+
+                        <button
+                            onClick={() =>
+                                handleDeleteCategory(category.id)
+                            }
+                            className="border px-3 py-1 rounded mt-2"
+                        >
+                            Remover
+                        </button>
 
                     </div>
 
