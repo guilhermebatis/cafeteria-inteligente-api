@@ -133,12 +133,6 @@ export default function StockPage() {
 
             <h1 className="text-3xl font-bold mb-6">
                 Estoque
-                <a
-                    href="/stock/history"
-                    className="text-3xl font-bold mb-6 text-blue-500 ml-4"
-                >
-                    Histórico
-                </a>
             </h1>
 
             <div className="grid gap-4">

@@ -40,6 +40,7 @@ export default function Home() {
     );
 
     const data = await response.json();
+    console.log(data)
 
     setOrder(data);
   }
@@ -101,10 +102,13 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+
     async function fetchProducts() {
       const token = localStorage.getItem("access");
 
-      if (!token) return;
+      if (!token) {
+        router.push("/login");
+      }
 
       const response = await fetch(
         "http://127.0.0.1:8000/api/products/",
@@ -117,7 +121,7 @@ export default function Home() {
 
       const data = await response.json();
 
-      setProducts(data.results || []);
+      setProducts(data);
     }
 
     fetchProducts();

@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface NavbarProps {
     totalItems: number;
@@ -10,23 +13,28 @@ export default function Navbar({
     onLogout,
 }: NavbarProps) {
 
+    const pathname = usePathname();
+
+    if (pathname === "/login") {
+        return null;
+    }
+
     return (
+
         <div className="flex items-center justify-between mb-10">
 
             <h1 className="text-3xl font-bold">
                 Cafeteria Inteligente
             </h1>
 
-
-
             <div className="flex items-center gap-4">
+
                 <Link
                     href="/"
                     className="border px-4 py-2 rounded"
                 >
                     Home
                 </Link>
-
 
                 <Link
                     href="/cart"
@@ -52,5 +60,6 @@ export default function Navbar({
             </div>
 
         </div>
+
     );
 }
