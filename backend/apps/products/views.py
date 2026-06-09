@@ -7,7 +7,6 @@ from .serializers import (ProductSerializer, CategorySerializer, OrderSerializer
                           StockMovementSerializer, PaymentSerializer, PaymentInputSerializer,
                           ApprovePaymentSerializer)
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import UserSerializer
@@ -18,13 +17,13 @@ from apps.orders.services import (add_item_to_order, remove_item_from_order,
                                   finalize_order, process_payment)
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from django.utils.timezone import now
+from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_available=True)
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [DjangoModelPermissions]
 
     filter_backends = [DjangoFilterBackend,
                        filters.SearchFilter,
@@ -109,7 +108,7 @@ class MeView(APIView):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [DjangoModelPermissions]
 
     filter_backends = [DjangoFilterBackend,
                        filters.SearchFilter, filters.OrderingFilter,
@@ -208,18 +207,24 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = OrderSerializer(order)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'], serializer_class=PaymentInputSerializer)
+    @action(detail=True, methods=['post'],
+            serializer_class=PaymentInputSerializer)
     def pay(self, request, pk=None):
         order = self.get_object()
         serializer = PaymentInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         try:
-            payment = process_payment(order, serializer.validated_data["method"])
+            payment = process_payment(order,
+                                      serializer.validated_data["method"])
+
         except ValueError as e:
             return Response({'error': str(e)}, status=400)
+
         return Response(PaymentSerializer(payment).data)
 
-    @action(detail=True, methods=['post'], serializer_class=ApprovePaymentSerializer)
+    @action(detail=True, methods=['post'],
+            serializer_class=ApprovePaymentSerializer)
     def approve_payment(self, request, pk=None):
         order = self.get_object()
         payment = order.payments.last()
@@ -243,7 +248,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [DjangoModelPermissions]
 
     @action(detail=True, methods=['post'])
     def add_stock(self, request, pk=None):
@@ -268,13 +273,13 @@ class IngredientViewSet(viewsets.ModelViewSet):
 class ProductIngredientViewSet(viewsets.ModelViewSet):
     queryset = ProductIngredient.objects.all()
     serializer_class = ProductIngredientSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [DjangoModelPermissions]
 
 
 class StockMovementViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = StockMovement.objects.all()
     serializer_class = StockMovementSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [DjangoModelPermissions]
 
     filter_backends = [DjangoFilterBackend,
                        filters.OrderingFilter, filters.SearchFilter]

@@ -12,20 +12,20 @@ export default function LoginPage() {
   console.log(password);
 
   async function handleLogin(e: React.FormEvent) {
-  e.preventDefault();
+    e.preventDefault();
 
     const response = await fetch(
-    "http://127.0.0.1:8000/api/token/",
-    {
+      "http://127.0.0.1:8000/api/token/",
+      {
         method: "POST",
         headers: {
-        "Content-Type": "application/json",
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-        username,
-        password,
+          username,
+          password,
         }),
-    }
+      }
     );
 
     const data = await response.json();
@@ -33,8 +33,9 @@ export default function LoginPage() {
     console.log(data);
     localStorage.setItem("access", data.access);
     localStorage.setItem("refresh", data.refresh);
+    localStorage.setItem('is_staff', String(data.is_staff))
     router.push("/");
-}  
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center">
@@ -43,9 +44,9 @@ export default function LoginPage() {
           Login
         </h1>
 
-        <form   
-        onSubmit={handleLogin}
-        className="space-y-4">
+        <form
+          onSubmit={handleLogin}
+          className="space-y-4">
 
           <div>
             <label className="block mb-1">

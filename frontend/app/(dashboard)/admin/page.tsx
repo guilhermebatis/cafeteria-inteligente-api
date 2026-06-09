@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 
 export default function AdminPage() {
@@ -8,9 +9,12 @@ export default function AdminPage() {
     const [productsCount, setProductsCount] = useState(0);
     const [ingredientsCount, setIngredientsCount] = useState(0);
     const [lowStockIngredients, setLowStockIngredients] = useState<any[]>([]);
+    const router = useRouter();
 
     async function fetchDashboardData() {
         try {
+            const isStaff = localStorage.getItem("is_staff");
+            if (isStaff !== "true") { router.push("/"); }
 
             const token = localStorage.getItem("access");
 
