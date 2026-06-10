@@ -33,7 +33,19 @@ export default function LoginPage() {
     console.log(data);
     localStorage.setItem("access", data.access);
     localStorage.setItem("refresh", data.refresh);
-    localStorage.setItem('is_staff', String(data.is_staff))
+
+    const meresponse = await fetch(
+      "http://127.0.0.1:8000/api/users/me/",
+      {
+        headers: {
+          Authorization: `Bearer ${data.access}`,
+        }
+      })
+
+    const meData = await meresponse.json()
+
+    localStorage.setItem("is_staff", String(meData.is_staff),)
+
     router.push("/");
   }
 

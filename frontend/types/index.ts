@@ -24,5 +24,6 @@ export interface Order {
   id: number;
   total_price: string;
   items: OrderItem[];
+  created_at: Date;
 }
 
