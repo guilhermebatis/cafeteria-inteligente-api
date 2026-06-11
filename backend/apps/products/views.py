@@ -236,7 +236,6 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Response({"error": "Payment already approved"}, status=400)
 
         try:
-            finalize_order(order)
             payment.status = "APPROVED"
             payment.save()
         except ValueError as e:

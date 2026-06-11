@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Order } from "@/types";
@@ -9,6 +9,7 @@ export default function ReceiptPage() {
 
     const params = useParams();
     const [order, setOrder] = useState<Order | null>(null);
+    const router = useRouter();
 
 
     console.log(params.id);
@@ -60,6 +61,21 @@ export default function ReceiptPage() {
             "
             >
 
+                <button
+                    onClick={() => router.push("/admin/cashier")}
+                    className="
+                    absolute
+                    top-4
+                    right-4
+                    text-black
+                    font-bold
+                    text-xl
+                    hover:text-red-500
+                    "
+                >
+                    ✕
+                </button>
+
                 {order && (
 
                     <>
@@ -70,19 +86,20 @@ export default function ReceiptPage() {
                                 className="
                                 text-2xl
                                 font-bold
+                                text-black
                             "
                             >
                                 Cafeteria Inteligente
                             </h1>
 
-                            <p className="mt-2">
+                            <p className="mt-2 text-black">
                                 Pedido #{order.id}
                             </p>
 
                             <p
                                 className="
                                 text-sm
-                                text-gray-500
+                                text-black
                             "
                             >
                                 {new Date(
@@ -98,6 +115,7 @@ export default function ReceiptPage() {
                             className="
                             space-y-2
                             mt-6
+                            text-black
                         "
                         >
 
@@ -118,7 +136,7 @@ export default function ReceiptPage() {
                                     </span>
 
                                     <span>
-                                        R$ {item.quantity} x {item.price}
+                                        R$ {(item.quantity * item.price).toFixed(2)}
                                     </span>
 
                                 </div>
@@ -135,6 +153,7 @@ export default function ReceiptPage() {
                             justify-between
                             font-bold
                             text-lg
+                            text-black
                         "
                         >
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { toast, Toaster } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface Product {
     id: number;
@@ -38,6 +39,7 @@ export default function CashierPage() {
         = useState<number | null>(null);
     const [showPaymentModal, setShowPaymentModal] =
         useState(false);
+    const router = useRouter();
 
     async function fetchOrder(orderIdParam?: number) {
 
@@ -301,7 +303,7 @@ export default function CashierPage() {
 
             console.log(data);
 
-            toast.error("Erro ao finalizar pedido");
+            toast.error(data.error || "Erro ao finalizar pedido");
             return;
         }
 
@@ -353,12 +355,16 @@ export default function CashierPage() {
                 },
             });
 
-        if (!response.ok) {
+        if (!approveResponse.ok) {
             toast.error("Erro ao aprovar pagamento")
             return
         }
 
         toast.success("pagamento aprovado")
+
+        await handleFinalizeOrder();
+
+        router.push(`/receipt/${orderId}`);
 
         setShowPaymentModal(false);
 
@@ -367,6 +373,7 @@ export default function CashierPage() {
         await createOrder();
 
     }
+
 
     useEffect(() => {
 
@@ -642,7 +649,7 @@ export default function CashierPage() {
                     R$ {Number(order?.total_price || 0).toFixed(2)}
                     <br />
                     <br />
-                    <button onClick={handleFinalizeOrder}>finalizar</button>
+                    <button onClick={() => setShowPaymentModal(true)}>finalizar</button>
 
                 </h2>
 

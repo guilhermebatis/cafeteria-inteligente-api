@@ -15,7 +15,7 @@ export default function Navbar({
 
     const pathname = usePathname();
 
-    if (pathname === "/login") {
+    if (pathname === "/login" || pathname.startsWith("/receipt")) {
         return null;
     }
 
