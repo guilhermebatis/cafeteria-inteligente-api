@@ -18,6 +18,7 @@ from apps.orders.services import (add_item_to_order, remove_item_from_order,
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
+from django.contrib.auth.models import User
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -103,6 +104,12 @@ class MeView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [DjangoModelPermissions]
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
