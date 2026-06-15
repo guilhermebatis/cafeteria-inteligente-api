@@ -1,11 +1,11 @@
 from rest_framework import viewsets, filters
 from .models import (Product, Category, Order, Ingredient,
-                     ProductIngredient, StockMovement, Payment)
+                     ProductIngredient, StockMovement, Customer)
 from .serializers import (ProductSerializer, CategorySerializer, OrderSerializer,
                           AddStockSerializer, AddItemSerializer, IngredientSerializer,
                           ProductIngredientSerializer, AddIngredientSerializer, RemoveIngredientSerializer,
                           StockMovementSerializer, PaymentSerializer, PaymentInputSerializer,
-                          ApprovePaymentSerializer)
+                          ApprovePaymentSerializer, CustomerSerializer)
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -292,3 +292,9 @@ class StockMovementViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['movement_type', 'ingredient']
     ordering_fields = ['created_at']
     search_fields = ['ingredient__name']
+
+
+class CustomerViewSet(viewsets.ModelViewSet):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+    permission_classes = [DjangoModelPermissions]

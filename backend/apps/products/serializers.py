@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import Product, Category, OrderItem, Order, Ingredient, ProductIngredient, StockMovement, Payment
+from .models import (Product, Category, OrderItem, Order,
+                     Ingredient, ProductIngredient, StockMovement,
+                     Payment, Customer)
 from django.contrib.auth.models import User
 
 
@@ -126,3 +128,8 @@ class PaymentSerializer(serializers.ModelSerializer):
 class ApprovePaymentSerializer(serializers.Serializer):
     pass
 
+
+class CustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = "__all__"
