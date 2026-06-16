@@ -134,8 +134,6 @@ export default function UsersPage() {
 
     async function handleDisableUser(user: User) {
 
-        if (!selectedUser) return;
-
         const token = localStorage.getItem('access')
 
         const response = await fetch(
