@@ -13,6 +13,7 @@ interface Product {
 
 interface Order {
     id: number;
+    customer?: Number | null
     user: number;
     total_price: string;
     is_completed: boolean;
@@ -28,6 +29,15 @@ interface OrderItem {
 
 }
 
+interface Customer {
+    id: Number,
+    name: string,
+    phone: string,
+    email: string,
+    is_active: Boolean,
+
+}
+
 export default function CashierPage() {
 
     const [loading, setLoading] = useState(true);
@@ -40,6 +50,7 @@ export default function CashierPage() {
     const [showPaymentModal, setShowPaymentModal] =
         useState(false);
     const router = useRouter();
+    const [customers, setCustomers] = useState<Customer[]>([]);
 
     async function fetchOrder(orderIdParam?: number) {
 
@@ -70,6 +81,23 @@ export default function CashierPage() {
         setLoading(false);
 
     }
+
+    async function fetchCustomer() {
+
+        const token = localStorage.getItem('access')
+
+        const response = await fetch(
+            "http://127.0.0.1:8000/api/customers/",
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            }
+        )
+        const data = await response.json()
+        setCustomers(data)
+    }
+
 
     async function createOrder() {
         const token = localStorage.getItem("access");
@@ -374,10 +402,41 @@ export default function CashierPage() {
 
     }
 
+    async function handleSelectCustomer(customerId: number) {
+
+        if (!orderId) return
+
+        const token = localStorage.getItem('access')
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/orders/${orderId}/set_customer/`,
+            {
+                method: 'PATCH',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    customer: customerId,
+                })
+            })
+
+        if (!response.ok) {
+            toast.error("Error ao vincular Cliente")
+            return
+        }
+
+        toast.success('Cliente vinculado')
+        const data = await response.json();
+        console.log(data);
+        await fetchOrder()
+    }
+
 
     useEffect(() => {
 
         getCurrentOrder();
+        fetchCustomer();
 
     }, []);
 
@@ -540,6 +599,41 @@ export default function CashierPage() {
             <h1 className="text-4xl font-bold mb-6">
                 Caixa
             </h1>
+
+            <div className="mb-4">
+
+                <label className="block mb-2 font-semibold">
+                    Cliente
+                </label>
+
+                <select
+                    className="border p-2 rounded w-full"
+                    onChange={(e) =>
+                        handleSelectCustomer(
+                            Number(e.target.value)
+                        )
+                    }
+                    defaultValue=""
+                >
+
+                    <option value="">
+                        Selecione um cliente
+                    </option>
+
+                    {customers.map((customer) => (
+
+                        <option
+                            key={customer.id}
+                            value={customer.id}
+                        >
+                            {customer.name}
+                        </option>
+
+                    ))}
+
+                </select>
+
+            </div>
 
             <input
                 ref={inputRef}

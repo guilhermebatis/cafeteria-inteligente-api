@@ -32,8 +32,9 @@ export default function ReceiptPage() {
         }
 
         const data = await response.json();
+        console.log(data);
         setOrder(data)
-
+        console.log(order)
     }
 
     useEffect(() => {
@@ -94,6 +95,10 @@ export default function ReceiptPage() {
 
                             <p className="mt-2 text-black">
                                 Pedido #{order.id}
+                            </p>
+
+                            <p className="text-black">
+                                Cliente: {order.customer?.name || "Consumidor Final"}
                             </p>
 
                             <p

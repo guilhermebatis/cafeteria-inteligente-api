@@ -22,8 +22,16 @@ export interface OrderItem {
 
 export interface Order {
   id: number;
+  customer?: Customer | null;
   total_price: string;
   items: OrderItem[];
   created_at: Date;
 }
 
+export interface Customer {
+    id: number;
+    name: string;
+    phone: string;
+    email: string;
+    is_active: boolean;
+}

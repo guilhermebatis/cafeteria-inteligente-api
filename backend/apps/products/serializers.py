@@ -92,13 +92,27 @@ class OrderItemSerializer(serializers.ModelSerializer):
         fields = ['id', 'product', 'quantity', 'price']
 
 
+class CustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = "__all__"
+
+
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+    customer = CustomerSerializer(read_only=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'created_at',
-                  'total_price', 'items', 'is_completed']
+        fields = [
+            'id',
+            'user',
+            'customer',
+            'created_at',
+            'total_price',
+            'items',
+            'is_completed'
+        ]
         read_only_fields = ['user']
 
 
@@ -127,9 +141,3 @@ class PaymentSerializer(serializers.ModelSerializer):
 
 class ApprovePaymentSerializer(serializers.Serializer):
     pass
-
-
-class CustomerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Customer
-        fields = "__all__"

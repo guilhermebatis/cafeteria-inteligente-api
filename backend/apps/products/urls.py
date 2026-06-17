@@ -19,6 +19,6 @@ router.register('users', UserViewSet, basename='users')
 router.register(r'customers', CustomerViewSet, basename='customers')
 
 urlpatterns = [
+    path('users/me/', MeView.as_view(), name='me'),
     path('', include(router.urls)),
-    path('users/me/', MeView.as_view()),
 ]

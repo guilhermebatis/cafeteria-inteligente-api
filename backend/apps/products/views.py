@@ -250,6 +250,26 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         return Response(PaymentSerializer(payment).data)
 
+    @action(detail=True, methods=['patch'])
+    def set_customer(self, request, pk=None):
+        order = self.get_object()
+        customer_id = request.data.get('customer')
+        if not customer_id:
+            return Response(
+                {'error': 'Customer is required'},
+                status=404)
+        customer = Customer.objects.filter(id=customer_id).first()
+        if not customer:
+            return Response(
+                {'error': 'Customer not found'},
+                status=404
+            )
+        order.customer = customer
+        order.save()
+        return Response(
+            OrderSerializer(order).data
+        )
+
 
 class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()

@@ -41,7 +41,7 @@ export default function LoginPage() {
           Authorization: `Bearer ${data.access}`,
         }
       })
-
+    console.log(meresponse.status);
     const meData = await meresponse.json()
 
     localStorage.setItem("is_staff", String(meData.is_staff),)
