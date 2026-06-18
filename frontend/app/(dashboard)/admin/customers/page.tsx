@@ -6,6 +6,7 @@ import { toast, Toaster } from "sonner";
 interface Customer {
     id: Number,
     name: string,
+    cpf: String,
     phone: string,
     email: string,
     is_active: Boolean,
@@ -20,6 +21,7 @@ export default function CustomerPage() {
     const [phone, setPhone] = useState("");
     const [email, setEmail] = useState("");
     const [isActive, setIsActive] = useState(true);
+    const [cpf, setCpf] = useState('')
 
     async function fetchCustomers() {
 
@@ -55,6 +57,7 @@ export default function CustomerPage() {
                 },
                 body: JSON.stringify({
                     name,
+                    cpf,
                     phone,
                     email,
                     is_active: isActive
@@ -68,6 +71,7 @@ export default function CustomerPage() {
             setName('')
             setPhone('')
             setEmail('')
+            setCpf('')
 
             await fetchCustomers()
         }
@@ -89,6 +93,7 @@ export default function CustomerPage() {
                 },
                 body: JSON.stringify({
                     name,
+                    cpf,
                     phone,
                     email,
                 })
@@ -102,6 +107,7 @@ export default function CustomerPage() {
             setName('')
             setPhone('')
             setEmail('')
+            setCpf('')
 
             await fetchCustomers()
 
@@ -162,6 +168,14 @@ export default function CustomerPage() {
                     placeholder="Nome"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    className="border p-2 rounded"
+                />
+
+                <input
+                    type="text"
+                    placeholder="CPF"
+                    value={cpf}
+                    onChange={(e) => setCpf(e.target.value)}
                     className="border p-2 rounded"
                 />
 

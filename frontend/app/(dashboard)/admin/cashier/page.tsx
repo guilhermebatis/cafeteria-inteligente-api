@@ -32,6 +32,7 @@ interface OrderItem {
 interface Customer {
     id: Number,
     name: string,
+    cpf: string,
     phone: string,
     email: string,
     is_active: Boolean,
@@ -51,6 +52,13 @@ export default function CashierPage() {
         useState(false);
     const router = useRouter();
     const [customers, setCustomers] = useState<Customer[]>([]);
+    const [customerSearch, setCustomerSearch] = useState('')
+
+    const filteredCustomers = customers.filter((customer) =>
+        customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+        customer.cpf?.includes(customerSearch) ||
+        customer.phone?.includes(customerSearch)
+    );
 
     async function fetchOrder(orderIdParam?: number) {
 
@@ -606,6 +614,14 @@ export default function CashierPage() {
                     Cliente
                 </label>
 
+                <input
+                    type="text"
+                    placeholder="Buscar por nome, CPF ou telefone"
+                    value={customerSearch}
+                    onChange={(e) => setCustomerSearch(e.target.value)}
+                    className="border p-2 rounded w-full"
+                />
+
                 <select
                     className="border p-2 rounded w-full"
                     onChange={(e) =>
@@ -620,18 +636,26 @@ export default function CashierPage() {
                         Selecione um cliente
                     </option>
 
-                    {customers.map((customer) => (
+                    {filteredCustomers.map((customer) => (
 
                         <option
                             key={customer.id}
                             value={customer.id}
                         >
-                            {customer.name}
+                            {customer.name} - CPF: {customer.cpf} - Tel: {customer.phone}
                         </option>
 
                     ))}
 
                 </select>
+
+                {order?.customer && (
+                    <div className="mt-2 border p-2 rounded">
+                        <p><strong>Cliente:</strong> {order.customer.name}</p>
+                        <p><strong>CPF:</strong> {order.customer.cpf}</p>
+                        <p><strong>Telefone:</strong> {order.customer.phone}</p>
+                    </div>
+                )}
 
             </div>
 

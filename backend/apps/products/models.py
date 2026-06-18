@@ -43,6 +43,7 @@ class Product(models.Model):
 
 class Customer(models.Model):
     name = models.CharField(max_length=255)
+    cpf = models.CharField(max_length=14, unique=True, blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
