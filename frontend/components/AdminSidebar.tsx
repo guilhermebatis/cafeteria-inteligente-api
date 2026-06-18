@@ -68,6 +68,20 @@ export default function AdminSidebar() {
                 Histórico de estoque
             </Link>
 
+            <Link
+                href="/admin/users"
+                className="border p-2 rounded"
+            >
+                Usuario
+            </Link>
+
+            <Link
+                href="/admin/customers"
+                className="border p-2 rounded"
+            >
+                Clientes
+            </Link>
+
         </aside>
     );
 }
