@@ -318,3 +318,10 @@ class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     permission_classes = [DjangoModelPermissions]
+
+    @action(detail=True, methods=['get'])
+    def orders(self, request, pk=None):
+        customer = self.get_object()
+        orders = customer.orders.filter(is_completed=True)
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data)

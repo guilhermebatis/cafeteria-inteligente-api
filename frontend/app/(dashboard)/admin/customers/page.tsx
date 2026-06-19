@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface Customer {
     id: Number,
@@ -22,6 +23,7 @@ export default function CustomerPage() {
     const [email, setEmail] = useState("");
     const [isActive, setIsActive] = useState(true);
     const [cpf, setCpf] = useState('')
+    const router = useRouter();
 
     async function fetchCustomers() {
 
@@ -273,6 +275,15 @@ export default function CustomerPage() {
                                 {customer.is_active
                                     ? "Desativar"
                                     : "Ativar"}
+                            </button>
+
+                            <button
+                                onClick={() =>
+                                    router.push(`/admin/customers/${customer.id}`)
+                                }
+                                className="border px-3 py-1 rounded"
+                            >
+                                Histórico
                             </button>
 
                         </div>
