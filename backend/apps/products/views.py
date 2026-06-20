@@ -19,6 +19,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
 from django.contrib.auth.models import User
+from django.db.models import Sum, Avg
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -269,6 +270,22 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response(
             OrderSerializer(order).data
         )
+
+    @action(detail=False, methods=['get'])
+    def stats(self, resquest):
+        orders = Order.objects.filter(is_completed=True)
+        return Response({
+            "orders_count": orders.count(),
+            "total_revenue":
+                orders.aggregate(
+                    total=Sum("total_price")
+                )["total"] or 0,
+
+            "average_ticket":
+                orders.aggregate(
+                    avg=Avg("total_price")
+                )["avg"] or 0,
+        })
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
