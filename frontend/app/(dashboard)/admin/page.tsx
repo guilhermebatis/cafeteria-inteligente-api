@@ -15,6 +15,7 @@ export default function AdminPage() {
         total_revenue: 0,
         average_ticket: 0,
     });
+    const [customersCount, setCustomersCount] = useState(0);
 
     async function fetchDashboardData() {
         try {
@@ -52,14 +53,26 @@ export default function AdminPage() {
                 }
             )
 
+            const cumoserstatus = await fetch(
+                "http://127.0.0.1:8000/api/customers/",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+
+                    }
+                }
+            )
+
 
             const productsData = await productsResponse.json();
             const ingredientsData = await igredientsresponse.json();
             const statsData = await statusresponse.json()
+            const cumoserData = await cumoserstatus.json()
 
             setProductsCount(productsData.length);
             setIngredientsCount(ingredientsData.length);
             setStats(statsData)
+            setCustomersCount(cumoserData.length)
 
             const lowStock = ingredientsData.filter(
                 (ingredient: any) =>
@@ -128,6 +141,16 @@ export default function AdminPage() {
                         </p>
                     </div>
 
+                </div>
+
+                <div className="border rounded-lg p-4 mb-8">
+                    <h3 className="text-sm text-gray-500">
+                        Clientes
+                    </h3>
+
+                    <p className="text-3xl font-bold">
+                        {customersCount}
+                    </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-10">
