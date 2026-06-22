@@ -17,6 +17,7 @@ export default function AdminPage() {
     });
     const [customersCount, setCustomersCount] = useState(0);
     const [topProducts, setTopProducts] = useState<any[]>([]);
+    const [topCustomers, setTopCustomers] = useState<any[]>([]);
 
     async function fetchDashboardData() {
         try {
@@ -73,18 +74,30 @@ export default function AdminPage() {
                 }
             )
 
+            const TopCustomerResponse = await fetch(
+                "http://127.0.0.1:8000/api/customers/top_customers/",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    }
+                }
+
+            )
+
 
             const productsData = await productsResponse.json();
             const ingredientsData = await igredientsresponse.json();
             const statsData = await statusresponse.json()
             const cumoserData = await cumoserstatus.json()
             const topProducts = await topProductsResponse.json()
+            const topCustomers = await TopCustomerResponse.json()
 
             setProductsCount(productsData.length);
             setIngredientsCount(ingredientsData.length);
             setStats(statsData)
             setCustomersCount(cumoserData.length)
             setTopProducts(topProducts)
+            setTopCustomers(topCustomers)
 
             const lowStock = ingredientsData.filter(
                 (ingredient: any) =>
@@ -155,7 +168,7 @@ export default function AdminPage() {
 
                 </div>
 
-                <div className="border rounded-lg p-4 gap-4 mt-8">
+                <div className="border rounded-lg p-4 mb-8 mt-8">
 
                     <h2 className="text-xl font-bold mb-4">
                         Produtos Mais Vendidos
@@ -194,6 +207,37 @@ export default function AdminPage() {
                     <p className="text-3xl font-bold">
                         {customersCount}
                     </p>
+                </div>
+
+                <div className="border rounded-lg p-4 mt-8 mb-8">
+
+                    <h2 className="text-xl font-bold mb-4">
+                        Top Clientes
+                    </h2>
+
+                    <div className="space-y-2">
+
+                        {topCustomers.map((customer) => (
+
+                            <div
+                                key={customer.id}
+                                className="flex justify-between"
+                            >
+
+                                <span>
+                                    {customer.name}
+                                </span>
+
+                                <span>
+                                    R$ {Number(customer.total_spent).toFixed(2)}
+                                </span>
+
+                            </div>
+
+                        ))}
+
+                    </div>
+
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-10">

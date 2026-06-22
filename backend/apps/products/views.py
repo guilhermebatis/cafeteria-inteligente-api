@@ -368,3 +368,30 @@ class CustomerViewSet(viewsets.ModelViewSet):
         orders = customer.orders.filter(is_completed=True)
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def top_customers(self, request):
+        customers = Customer.objects.all()
+        data = []
+        for customer in customers:
+            total_spent = (
+                    customer.orders.filter(
+                        is_completed=True
+                    ).aggregate(
+                        total=Sum("total_price")
+                    )['total']
+                    or 0
+                )
+            data.append({
+                'id': customer.id,
+                'name': customer.name,
+                'total_spent': total_spent,
+            })
+
+        data = sorted(
+            data,
+            key=lambda c: c["total_spent"],
+            reverse=True
+        )
+
+        return Response(data[:5])
