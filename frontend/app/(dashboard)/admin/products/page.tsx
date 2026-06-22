@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface Category {
     id: number;
@@ -33,6 +34,7 @@ interface ProductIngredient {
 
 
 export default function ProductsPage() {
+    const router = useRouter();
     const [products, setProducts] = useState<Product[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [name, setName] = useState("");
@@ -76,6 +78,10 @@ export default function ProductsPage() {
 
         const token = localStorage.getItem('access')
 
+        if (!token) {
+            router.push("/login");
+            return;
+        }
 
         const response = await fetch(
             "http://127.0.0.1:8000/api/products/",

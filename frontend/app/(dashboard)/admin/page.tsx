@@ -116,9 +116,23 @@ export default function AdminPage() {
 
     useEffect(() => {
 
+        const token = localStorage.getItem("access");
+
+        if (!token) {
+            router.push("/login");
+            return;
+        }
+
+
+    }, []);
+
+    useEffect(() => {
+
         fetchDashboardData();
 
     }, []);
+
+
 
 
 

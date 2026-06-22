@@ -93,43 +93,46 @@ export default function Home() {
     toast.success("Item adicionado ao carrinho!");
   }
 
+
+  async function fetchProducts() {
+    const token = localStorage.getItem("access");
+
+    if (!token) {
+      router.push("/login");
+      return
+    }
+
+    const response = await fetch(
+      "http://127.0.0.1:8000/api/products/",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      router.push("/login");
+      return;
+    }
+
+    const data = await response.json();
+
+    setProducts(data);
+  }
+
+
   useEffect(() => {
     const token = localStorage.getItem("access");
 
     if (!token) {
       router.push("/login");
+      return;
     }
-  }, []);
-
-  useEffect(() => {
-
-    async function fetchProducts() {
-      const token = localStorage.getItem("access");
-
-      if (!token) {
-        router.push("/login");
-      }
-
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/products/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      setProducts(data);
-    }
-
-    fetchProducts();
 
     fetchOrder();
+    fetchProducts()
   }, []);
-
-
 
   return (
     <main className="p-10">
@@ -137,15 +140,16 @@ export default function Home() {
 
       <div className="grid gap-4">
 
-        {products.map((product) => (
+        {Array.isArray(products) &&
+          products.map((product) => (
 
-          <ProductCard
-            key={product.id}
-            product={product}
-            onAddToCart={handleAddToCart}
-          />
+            <ProductCard
+              key={product.id}
+              product={product}
+              onAddToCart={handleAddToCart}
+            />
 
-        ))}
+          ))}
 
       </div>
 
