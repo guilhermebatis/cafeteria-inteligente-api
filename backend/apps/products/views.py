@@ -5,7 +5,7 @@ from .serializers import (ProductSerializer, CategorySerializer, OrderSerializer
                           AddStockSerializer, AddItemSerializer, IngredientSerializer,
                           ProductIngredientSerializer, AddIngredientSerializer, RemoveIngredientSerializer,
                           StockMovementSerializer, PaymentSerializer, PaymentInputSerializer,
-                          ApprovePaymentSerializer, CustomerSerializer)
+                          ApprovePaymentSerializer, CustomerSerializer, OrderItem)
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -97,6 +97,32 @@ class ProductViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(product)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def top_selling(self, request):
+        products = Product.objects.all()
+        data = []
+        for product in products:
+            total_sold = sum(
+                item.quantity
+                for item in OrderItem.objects.filter(
+                    product=product,
+                    order__is_completed=True
+                )
+            )
+            data.append({
+                "id": product.id,
+                "name": product.name,
+                "total_sold": total_sold
+                })
+
+        data = sorted(
+            data,
+            key=lambda p: p["total_sold"],
+            reverse=True
+        )
+
+        return Response(data[:5])
 
 
 class MeView(APIView):

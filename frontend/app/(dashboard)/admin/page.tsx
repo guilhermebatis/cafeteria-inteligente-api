@@ -16,6 +16,7 @@ export default function AdminPage() {
         average_ticket: 0,
     });
     const [customersCount, setCustomersCount] = useState(0);
+    const [topProducts, setTopProducts] = useState<any[]>([]);
 
     async function fetchDashboardData() {
         try {
@@ -63,16 +64,27 @@ export default function AdminPage() {
                 }
             )
 
+            const topProductsResponse = await fetch(
+                "http://127.0.0.1:8000/api/products/top_selling/",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    }
+                }
+            )
+
 
             const productsData = await productsResponse.json();
             const ingredientsData = await igredientsresponse.json();
             const statsData = await statusresponse.json()
             const cumoserData = await cumoserstatus.json()
+            const topProducts = await topProductsResponse.json()
 
             setProductsCount(productsData.length);
             setIngredientsCount(ingredientsData.length);
             setStats(statsData)
             setCustomersCount(cumoserData.length)
+            setTopProducts(topProducts)
 
             const lowStock = ingredientsData.filter(
                 (ingredient: any) =>
@@ -139,6 +151,37 @@ export default function AdminPage() {
                         <p className="text-3xl font-bold">
                             R$ {Number(stats.average_ticket).toFixed(2)}
                         </p>
+                    </div>
+
+                </div>
+
+                <div className="border rounded-lg p-4 gap-4 mt-8">
+
+                    <h2 className="text-xl font-bold mb-4">
+                        Produtos Mais Vendidos
+                    </h2>
+
+                    <div className="space-y-2">
+
+                        {topProducts.map((product) => (
+
+                            <div
+                                key={product.id}
+                                className="flex justify-between"
+                            >
+
+                                <span>
+                                    {product.name}
+                                </span>
+
+                                <span>
+                                    {product.total_sold} vendas
+                                </span>
+
+                            </div>
+
+                        ))}
+
                     </div>
 
                 </div>
