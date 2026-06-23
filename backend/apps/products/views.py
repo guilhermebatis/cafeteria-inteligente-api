@@ -20,7 +20,9 @@ from rest_framework import status
 from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
 from django.contrib.auth.models import User
 from django.db.models import Sum, Avg
-
+from django.db.models.functions import TruncDate
+from datetime import timedelta
+from django.utils import timezone
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_available=True)
@@ -312,6 +314,18 @@ class OrderViewSet(viewsets.ModelViewSet):
                     avg=Avg("total_price")
                 )["avg"] or 0,
         })
+
+    @action(detail=False, methods=['get'])
+    def sales_by_day(self, resquest):
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        orders = (Order.objects.filter(is_completed=True,
+                                       created_at__gte=thirty_days_ago)
+                                    .annotate(date_only=TruncDate('created_at'))
+                                    .values('date_only')
+                                    .annotate(revenue=Sum("total_price"))
+                                    .order_by('date_only'))
+
+        return Response(list(orders))
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
