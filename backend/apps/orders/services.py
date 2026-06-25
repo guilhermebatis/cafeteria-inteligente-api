@@ -1,7 +1,18 @@
 from decimal import Decimal
-from apps.products.models import OrderItem, Order, Product, Ingredient, ProductIngredient, StockMovement, Payment
+from apps.products.models import OrderItem, Order, Product, Ingredient, ProductIngredient, StockMovement, Payment, Customer
 from django.db import transaction
 from rest_framework.response import Response
+from django.db.models import Sum, Avg
+from io import BytesIO
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+)
+from reportlab.lib.styles import getSampleStyleSheet
+from django.utils import timezone
+from datetime import timedelta, date
+from django.db.models.functions import TruncDate
 
 
 def add_item_to_order(order, product, quantity):
@@ -160,3 +171,192 @@ def process_payment(order, method):
             method=method,
             amount=order.total_price)
         return payment
+
+
+def get_sales_stats():
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    orders = Order.objects.filter(is_completed=True,
+                                  created_at__gte=thirty_days_ago)
+    return ({
+            "orders_count": orders.count(),
+            "total_revenue":
+                orders.aggregate(
+                    total=Sum("total_price")
+                )["total"] or 0,
+
+            "average_ticket":
+                orders.aggregate(
+                    avg=Avg("total_price")
+                )["avg"] or 0})
+
+
+def get_sales_by_day():
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    orders = (Order.objects.filter(is_completed=True,
+                                    created_at__gte=thirty_days_ago)
+                                    .annotate(date_only=TruncDate('created_at'))
+                                    .values('date_only')
+                                    .annotate(revenue=Sum("total_price"))
+                                    .order_by('date_only'))
+    return (orders)
+
+
+def get_top_products_sales():
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    products = Product.objects.all()
+    data = []
+    for product in products:
+        total_sold = sum(
+            item.quantity
+            for item in OrderItem.objects.filter(
+                product=product,
+                order__is_completed=True,
+                order__created_at__gte=thirty_days_ago
+            )
+        )
+        data.append({
+            "id": product.id,
+            "name": product.name,
+            "total_sold": total_sold
+            })
+
+    data = sorted(
+        data,
+        key=lambda p: p["total_sold"],
+        reverse=True
+    )
+    return data
+
+
+def get_top_customers():
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    customers = Customer.objects.all()
+    data = []
+    for customer in customers:
+        total_spent = sum(
+            order.total_price
+            for order in Order.objects.filter(
+                customer=customer,
+                is_completed=True,
+                created_at__gte=thirty_days_ago
+            )
+        )
+        data.append({
+            'id': customer.id,
+            'name': customer.name,
+            'total_spent': total_spent,
+            })
+    data = sorted(
+        data,
+        key=lambda p: p['total_spent'],
+        reverse=True,
+        )
+    return data
+
+
+def generate_sales_report():
+    data_sales = get_sales_stats()
+    top_products = get_top_products_sales()
+    top_customers = get_top_customers()
+    today_data = date.today()
+    formated_data = today_data.strftime("%d/%m/%Y")
+    last_30_days = today_data - timedelta(days=30)
+    formated_30_day = last_30_days.strftime("%d/%m/%Y")
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer)
+    styles = getSampleStyleSheet()
+    elements = []
+    elements.append(
+        Paragraph(
+            "Cafeteria Inteligente",
+            styles["Title"]
+            )
+        )
+    elements.append(
+        Spacer(1, 20)
+    )
+    elements.append(
+        Paragraph(
+            "Relatório de Vendas",
+            styles["Normal"]
+        )
+    )
+
+    elements.append(
+        Spacer(1, 20)
+    )
+
+    elements.append(
+        Paragraph(
+            f"Pedidos: {data_sales.get('orders_count')}",
+            styles["Normal"]
+        )
+    )
+
+    elements.append(
+        Paragraph(
+            f"Receita Total: R$ {data_sales.get('total_revenue')}",
+            styles["Normal"]
+        )
+    )
+
+    elements.append(
+        Paragraph(
+            f"Ticket Médio: R$ {data_sales.get('average_ticket')}",
+            styles["Normal"]
+        )
+    )
+
+    elements.append(
+        Spacer(1, 20)
+    )
+
+    elements.append(
+        Paragraph(
+            "produtos mais vendidos",
+            styles["Normal"]
+        )
+    )
+
+    for product in top_products[:5]:
+        elements.append(
+            Paragraph(
+                f"{product.get('name')} - {product.get('total_sold')} vendas",
+                styles["Normal"]
+            )
+        )
+
+    elements.append(
+        Spacer(1, 20)
+    )
+
+    for customer in top_customers[:5]:
+        elements.append(
+            Paragraph(
+                f"{customer.get("name")} - R${customer.get("total_spent")}",
+                styles["Normal"]
+            )
+        )
+
+    elements.append(
+        Spacer(1, 20)
+    )
+
+    elements.append(
+        Paragraph(
+            f'Data de geração: {formated_data}',
+            styles["Normal"]
+        )
+    )
+    elements.append(
+        Paragraph(
+            f'Período: {formated_30_day} a {formated_data}',
+            styles["Normal"]
+        )
+    )
+    doc.build(elements)
+
+    buffer.seek(0)
+
+    return buffer.getvalue()

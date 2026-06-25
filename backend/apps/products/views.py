@@ -14,15 +14,15 @@ from rest_framework.decorators import action
 from apps.orders.services import (add_item_to_order, remove_item_from_order,
                                   update_item_quantity, add_ingredient_to_product,
                                   update_ingredient_to_product, remove_ingredient_to_product,
-                                  finalize_order, process_payment)
+                                  finalize_order, process_payment, generate_sales_report,
+                                  get_sales_stats, get_sales_by_day, get_top_products_sales)
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
 from django.contrib.auth.models import User
 from django.db.models import Sum, Avg
-from django.db.models.functions import TruncDate
-from datetime import timedelta
-from django.utils import timezone
+from django.http import HttpResponse
+
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_available=True)
@@ -102,28 +102,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def top_selling(self, request):
-        products = Product.objects.all()
-        data = []
-        for product in products:
-            total_sold = sum(
-                item.quantity
-                for item in OrderItem.objects.filter(
-                    product=product,
-                    order__is_completed=True
-                )
-            )
-            data.append({
-                "id": product.id,
-                "name": product.name,
-                "total_sold": total_sold
-                })
-
-        data = sorted(
-            data,
-            key=lambda p: p["total_sold"],
-            reverse=True
-        )
-
+        data = get_top_products_sales()
         return Response(data[:5])
 
 
@@ -301,31 +280,28 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def stats(self, resquest):
-        orders = Order.objects.filter(is_completed=True)
-        return Response({
-            "orders_count": orders.count(),
-            "total_revenue":
-                orders.aggregate(
-                    total=Sum("total_price")
-                )["total"] or 0,
-
-            "average_ticket":
-                orders.aggregate(
-                    avg=Avg("total_price")
-                )["avg"] or 0,
-        })
+        data = get_sales_stats()
+        return Response(data)
 
     @action(detail=False, methods=['get'])
     def sales_by_day(self, resquest):
-        thirty_days_ago = timezone.now() - timedelta(days=30)
-        orders = (Order.objects.filter(is_completed=True,
-                                       created_at__gte=thirty_days_ago)
-                                    .annotate(date_only=TruncDate('created_at'))
-                                    .values('date_only')
-                                    .annotate(revenue=Sum("total_price"))
-                                    .order_by('date_only'))
-
+        orders = get_sales_by_day()
         return Response(list(orders))
+
+    @action(detail=False, methods=['get'])
+    def sales_report_pdf(self, resquest):
+        pdf = generate_sales_report()
+
+        response = HttpResponse(
+            pdf,
+            content_type="application/pdf"
+        )
+
+        response[
+            "Content-Disposition"
+        ] = 'attachment; filename="sales_report.pdf"'
+
+        return response
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
