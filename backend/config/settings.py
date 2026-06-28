@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 from decouple import config
 from datetime import timedelta
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -111,14 +112,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'cafeteria_db',
-        'USER': 'cafeteria_user',
-        'PASSWORD': 'cafeteria_password',
-        'HOST': 'db',
-        'PORT': '5432',
-    }
+    "default": dj_database_url.config(
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 
@@ -160,5 +157,6 @@ STATIC_URL = 'static/'
 
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
+    default="http://localhost:3000",
     cast=lambda v: [s.strip() for s in v.split(",")]
 )

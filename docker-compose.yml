@@ -19,6 +19,9 @@ services:
     build: ./backend
     container_name: cafeteria_backend
 
+    environment:
+      DATABASE_URL: postgresql://cafeteria_user:cafeteria_password@db:5432/cafeteria_db
+
     command: >
       sh -c "python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
