@@ -11,7 +11,7 @@ interface Category {
 
 
 export default function () {
-
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const [categories, setCategories] = useState<Category[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [name, setName] = useState("")
@@ -22,7 +22,7 @@ export default function () {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/categories/",
+            `${API_URL}/api/categories/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -49,7 +49,7 @@ export default function () {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/categories/",
+            `${API_URL}/api/categories/`,
             {
                 method: 'POST',
                 headers: {
@@ -82,7 +82,7 @@ export default function () {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/categories/${id}/`,
+            `${API_URL}/api/categories/${id}/`,
 
             {
                 method: 'DELETE',
@@ -114,7 +114,7 @@ export default function () {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/categories/${editingId}/`,
+            `${API_URL}/api/categories/${editingId}/`,
             {
                 method: 'PATCH',
                 headers: {

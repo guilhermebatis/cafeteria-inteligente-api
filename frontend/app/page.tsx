@@ -8,8 +8,8 @@ import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
 
 export default function Home() {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
-
   const [products, setProducts] = useState<Product[]>([]);
   const [order, setOrder] = useState<Order | null>(null);
   const [history, setHistory] = useState<Order[]>([]);
@@ -31,7 +31,7 @@ export default function Home() {
     if (!orderId) return;
 
     const response = await fetch(
-      `http://127.0.0.1:8000/api/orders/${orderId}/`,
+      `${API_URL}/api/orders/${orderId}/`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -52,7 +52,7 @@ export default function Home() {
 
     if (!orderId) {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/orders/",
+        `${API_URL}/api/orders/`,
         {
           method: "POST",
           headers: {
@@ -70,7 +70,7 @@ export default function Home() {
     }
 
     await fetch(
-      `http://127.0.0.1:8000/api/orders/${orderId}/add_item/`,
+      `${API_URL}/api/orders/${orderId}/add_item/`,
       {
         method: "POST",
         headers: {
@@ -103,7 +103,7 @@ export default function Home() {
     }
 
     const response = await fetch(
-      "http://127.0.0.1:8000/api/products/",
+      `${API_URL}/api/products/`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

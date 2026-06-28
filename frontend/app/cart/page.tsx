@@ -6,6 +6,7 @@ import { Order } from "@/types";
 import { toast } from "sonner";
 
 export default function CartPage() {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
     const [order, setOrder] = useState<Order | null>(null);
 
@@ -20,7 +21,7 @@ export default function CartPage() {
         if (!orderId) return;
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/orders/${orderId}/`,
+            `${API_URL}/api/orders/${orderId}/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -49,7 +50,7 @@ export default function CartPage() {
         const orderId = localStorage.getItem("order_id");
 
         await fetch(
-            `http://127.0.0.1:8000/api/orders/${orderId}/update_item/`,
+            `${API_URL}/api/orders/${orderId}/update_item/`,
             {
                 method: "PATCH",
                 headers: {
@@ -75,7 +76,7 @@ export default function CartPage() {
         const orderId = localStorage.getItem("order_id");
 
         await fetch(
-            `http://127.0.0.1:8000/api/orders/${orderId}/remove_item/`,
+            `${API_URL}/api/orders/${orderId}/remove_item/`,
             {
                 method: "DELETE",
                 headers: {
@@ -104,7 +105,7 @@ export default function CartPage() {
             const orderId = localStorage.getItem("order_id");
 
             await fetch(
-                `http://127.0.0.1:8000/api/orders/${orderId}/checkout/`,
+                `${API_URL}/api/orders/${orderId}/checkout/`,
                 {
                     method: "POST",
                     headers: {

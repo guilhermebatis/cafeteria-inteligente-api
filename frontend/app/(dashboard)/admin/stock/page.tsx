@@ -25,7 +25,7 @@ interface StockMovement {
 
 
 export default function StockPage() {
-
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [movements, setMovements] = useState<StockMovement[]>([]);
     const [stockInputs, setStockInputs] = useState<{
@@ -40,7 +40,7 @@ export default function StockPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/ingredients/",
+            `${API_URL}/api/ingredients/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -65,7 +65,7 @@ export default function StockPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/stock-movements/",
+            `${API_URL}/api/stock-movements/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -91,7 +91,7 @@ export default function StockPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/ingredients/${ingredientId}/add_stock/`,
+            `${API_URL}/api/ingredients/${ingredientId}/add_stock/`,
             {
                 method: "POST",
                 headers: {

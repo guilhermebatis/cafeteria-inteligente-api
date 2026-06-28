@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Order } from "@/types";
 
 export default function ReceiptPage() {
-
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
     const params = useParams();
     const [order, setOrder] = useState<Order | null>(null);
     const router = useRouter();
@@ -19,7 +19,7 @@ export default function ReceiptPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/orders/${params.id}/`,
+            `${API_URL}/api/orders/${params.id}/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,

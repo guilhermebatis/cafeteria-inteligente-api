@@ -34,6 +34,7 @@ interface ProductIngredient {
 
 
 export default function ProductsPage() {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const router = useRouter();
     const [products, setProducts] = useState<Product[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -60,7 +61,7 @@ export default function ProductsPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/ingredients/",
+            `${API_URL}/api/ingredients/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -84,7 +85,7 @@ export default function ProductsPage() {
         }
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/products/",
+            `${API_URL}/api/products/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -112,7 +113,7 @@ export default function ProductsPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/categories/",
+            `${API_URL}/api/categories/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -140,7 +141,7 @@ export default function ProductsPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/products/",
+            `${API_URL}/api/products/`,
             {
                 method: "POST",
                 headers: {
@@ -184,7 +185,7 @@ export default function ProductsPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/products/${id}/`,
+            `${API_URL}/api/products/${id}/`,
 
             {
                 method: 'DELETE',
@@ -232,7 +233,7 @@ export default function ProductsPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/products/${editingId}/`,
+            `${API_URL}/api/products/${editingId}/`,
 
             {
                 method: 'PATCH',
@@ -282,7 +283,7 @@ export default function ProductsPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/products/${selectedProduct.id}/update_ingredient/`,
+            `${API_URL}/api/products/${selectedProduct.id}/update_ingredient/`,
 
             {
                 method: 'PATCH',
@@ -332,7 +333,7 @@ export default function ProductsPage() {
         const token = localStorage.getItem('access');
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/products/${selectedProduct.id}/add_ingredient/`,
+            `${API_URL}/api/products/${selectedProduct.id}/add_ingredient/`,
 
             {
                 method: 'POST',
@@ -382,7 +383,7 @@ export default function ProductsPage() {
         const token = localStorage.getItem('access');
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/products/${selectedProduct.id}/remove_ingredient/`,
+            `${API_URL}/api/products/${selectedProduct.id}/remove_ingredient/`,
             {
                 method: 'POST',
                 headers: {

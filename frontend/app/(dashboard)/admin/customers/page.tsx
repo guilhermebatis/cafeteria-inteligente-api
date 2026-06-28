@@ -15,6 +15,7 @@ interface Customer {
 }
 
 export default function CustomerPage() {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [selectedCustomer, setSelectedCustomer] =
         useState<Customer | null>(null);
@@ -30,7 +31,7 @@ export default function CustomerPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/customers/",
+            `${API_URL}/api/customers/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -50,7 +51,7 @@ export default function CustomerPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/customers/",
+            `${API_URL}/api/customers/`,
             {
                 method: 'POST',
                 headers: {
@@ -86,7 +87,7 @@ export default function CustomerPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/customers/${selectedCustomer.id}/`,
+            `${API_URL}/api/customers/${selectedCustomer.id}/`,
             {
                 method: 'PATCH',
                 headers: {
@@ -121,7 +122,7 @@ export default function CustomerPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/customers/${customer.id}/`,
+            `${API_URL}/api/customers/${customer.id}/`,
             {
                 method: 'PATCH',
                 headers: {

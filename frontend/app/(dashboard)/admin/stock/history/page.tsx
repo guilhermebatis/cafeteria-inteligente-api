@@ -16,6 +16,7 @@ interface StockMovement {
 }
 
 export default function StockHistoryPage() {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
     const [movements, setMovements] =
         useState<StockMovement[]>([]);
@@ -26,7 +27,7 @@ export default function StockHistoryPage() {
             localStorage.getItem("access");
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/stock-movements/",
+            `${API_URL}/api/stock-movements/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,

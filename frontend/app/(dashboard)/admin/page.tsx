@@ -13,7 +13,7 @@ import {
 } from "recharts";
 
 export default function AdminPage() {
-
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const [productsCount, setProductsCount] = useState(0);
     const [ingredientsCount, setIngredientsCount] = useState(0);
     const [lowStockIngredients, setLowStockIngredients] = useState<any[]>([]);
@@ -36,7 +36,7 @@ export default function AdminPage() {
             const token = localStorage.getItem("access");
 
             const productsResponse = await fetch(
-                "http://127.0.0.1:8000/api/products/",
+                `${API_URL}/api/products/`,
 
                 {
                     headers: {
@@ -46,7 +46,7 @@ export default function AdminPage() {
             );
 
             const igredientsresponse = await fetch(
-                "http://127.0.0.1:8000/api/ingredients/",
+                `${API_URL}/api/ingredients/`,
 
                 {
                     headers: {
@@ -56,7 +56,7 @@ export default function AdminPage() {
             );
 
             const statusresponse = await fetch(
-                "http://127.0.0.1:8000/api/orders/stats/",
+                `${API_URL}/api/orders/stats/`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -65,7 +65,7 @@ export default function AdminPage() {
             )
 
             const cumoserstatus = await fetch(
-                "http://127.0.0.1:8000/api/customers/",
+                `${API_URL}/api/customers/`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -75,7 +75,7 @@ export default function AdminPage() {
             )
 
             const topProductsResponse = await fetch(
-                "http://127.0.0.1:8000/api/products/top_selling/",
+                `${API_URL}/api/products/top_selling/`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -84,7 +84,7 @@ export default function AdminPage() {
             )
 
             const TopCustomerResponse = await fetch(
-                "http://127.0.0.1:8000/api/customers/top_customers/",
+                `${API_URL}/api/customers/top_customers/`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -94,7 +94,7 @@ export default function AdminPage() {
             )
 
             const salesResponse = await fetch(
-                "http://localhost:8000/api/orders/sales_by_thirty_days/",
+                `${API_URL}/api/orders/sales_by_thirty_days/`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,

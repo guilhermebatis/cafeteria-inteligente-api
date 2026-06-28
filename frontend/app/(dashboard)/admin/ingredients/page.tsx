@@ -12,6 +12,7 @@ interface Ingredient {
 }
 
 export default function IngredientsPage() {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [name, setName] = useState("");
     const [stockQuantity, setStockQuantity] = useState(0);
@@ -23,7 +24,7 @@ export default function IngredientsPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/ingredients/",
+            `${API_URL}/api/ingredients/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -48,7 +49,7 @@ export default function IngredientsPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/ingredients/",
+            `${API_URL}/api/ingredients/`,
             {
                 method: "POST",
                 headers: {
@@ -90,7 +91,7 @@ export default function IngredientsPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/ingredients/${id}/`,
+            `${API_URL}/api/ingredients/${id}/`,
             {
                 method: "DELETE",
 
@@ -130,7 +131,7 @@ export default function IngredientsPage() {
         const token = localStorage.getItem('access')
 
         const responde = await fetch(
-            `http://127.0.0.1:8000/api/ingredients/${editingId}/`,
+            `${API_URL}/api/ingredients/${editingId}/`,
 
             {
                 method: 'PATCH',

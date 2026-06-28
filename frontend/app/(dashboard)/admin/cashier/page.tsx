@@ -40,7 +40,7 @@ interface Customer {
 }
 
 export default function CashierPage() {
-
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const [loading, setLoading] = useState(true);
     const [barcode, setBarcode] = useState("");
     const [orderId, setOrderId] = useState<number | null>(null);
@@ -69,7 +69,7 @@ export default function CashierPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/orders/${currentOrderId}/`,
+            `${API_URL}/api/orders/${currentOrderId}/`,
             {
                 method: "GET",
                 headers: {
@@ -95,7 +95,7 @@ export default function CashierPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/customers/",
+            "${API_URL}/api/customers/",
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -111,7 +111,7 @@ export default function CashierPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/orders/`,
+            `${API_URL}/api/orders/`,
 
             {
                 method: "POST",
@@ -138,7 +138,7 @@ export default function CashierPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/orders/current/`,
+            `${API_URL}/api/orders/current/`,
             {
                 method: "GET",
                 headers: {
@@ -163,7 +163,7 @@ export default function CashierPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/products/by_barcode/?barcode=${barcode}`,
+            `${API_URL}/api/products/by_barcode/?barcode=${barcode}`,
 
             {
                 headers: {
@@ -180,7 +180,7 @@ export default function CashierPage() {
         const data = await response.json();
 
         const orderResponse = await fetch(
-            `http://127.0.0.1:8000/api/orders/${orderId}/add_item/`,
+            `${API_URL}/api/orders/${orderId}/add_item/`,
             {
                 method: "POST",
                 headers: {
@@ -217,7 +217,7 @@ export default function CashierPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/orders/${orderId}/remove_item/`,
+            `${API_URL}/api/orders/${orderId}/remove_item/`,
 
             {
                 method: "DELETE",
@@ -253,7 +253,7 @@ export default function CashierPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/orders/${orderId}/update_item/`,
+            `${API_URL}/api/orders/${orderId}/update_item/`,
 
             {
                 method: "PATCH",
@@ -294,7 +294,7 @@ export default function CashierPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/orders/${orderId}/update_item/`,
+            `${API_URL}/api/orders/${orderId}/update_item/`,
 
             {
                 method: "PATCH",
@@ -323,7 +323,7 @@ export default function CashierPage() {
         const token = localStorage.getItem("access");
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/orders/${orderId}/finalize/`,
+            `${API_URL}/api/orders/${orderId}/finalize/`,
             {
                 method: "POST",
                 headers: {
@@ -360,7 +360,7 @@ export default function CashierPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/orders/${orderId}/pay/`,
+            `${API_URL}/api/orders/${orderId}/pay/`,
 
             {
                 method: 'POST',
@@ -382,7 +382,7 @@ export default function CashierPage() {
         }
 
         const approveResponse = await fetch(
-            `http://127.0.0.1:8000/api/orders/${orderId}/approve_payment/`,
+            `${API_URL}/api/orders/${orderId}/approve_payment/`,
             {
                 method: "POST",
                 headers: {
@@ -417,7 +417,7 @@ export default function CashierPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/orders/${orderId}/set_customer/`,
+            `${API_URL}/api/orders/${orderId}/set_customer/`,
             {
                 method: 'PATCH',
                 headers: {

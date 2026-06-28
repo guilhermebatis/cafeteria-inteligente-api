@@ -5,6 +5,7 @@ import OrderHistory from "@/components/OrderHistory";
 import { Order } from "@/types";
 
 export default function HistoryPage() {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
 
     const [history, setHistory] = useState<Order[]>([]);
 
@@ -15,7 +16,7 @@ export default function HistoryPage() {
         if (!token) return;
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/orders/history/",
+            `${API_URL}/api/orders/history/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,

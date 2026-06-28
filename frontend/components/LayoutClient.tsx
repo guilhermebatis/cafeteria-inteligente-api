@@ -12,6 +12,7 @@ export default function LayoutClient({
     children,
 }: LayoutClientProps) {
 
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
     const [totalItems, setTotalItems] = useState(0);
     const pathname = usePathname();
     const hideNavbarRoutes = [
@@ -39,7 +40,7 @@ export default function LayoutClient({
         }
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/orders/${orderId}/`,
+            `${API_URL}/api/orders/${orderId}/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,

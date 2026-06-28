@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function CustomerHistoryPage() {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const params = useParams()
     const [orders, setOrders] = useState<any[]>([]);
 
@@ -15,7 +16,7 @@ export default function CustomerHistoryPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/customers/${params.id}/orders/`,
+            `${API_URL}/api/customers/${params.id}/orders/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,

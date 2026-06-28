@@ -4,13 +4,14 @@ import Link from "next/link";
 import { toast } from "sonner";
 
 export default function AdminSidebar() {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL
 
     async function handleSalesReport() {
 
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            "http://localhost:8000/api/orders/sales_report_pdf/",
+            `${API_URL}/api/orders/sales_report_pdf/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,

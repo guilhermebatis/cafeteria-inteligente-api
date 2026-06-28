@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +16,7 @@ export default function LoginPage() {
     e.preventDefault();
 
     const response = await fetch(
-      "http://127.0.0.1:8000/api/token/",
+      `${API_URL}/api/token/`,
       {
         method: "POST",
         headers: {
@@ -35,7 +36,7 @@ export default function LoginPage() {
     localStorage.setItem("refresh", data.refresh);
 
     const meresponse = await fetch(
-      "http://127.0.0.1:8000/api/users/me/",
+      `${API_URL}/api/users/me/`,
       {
         headers: {
           Authorization: `Bearer ${data.access}`,

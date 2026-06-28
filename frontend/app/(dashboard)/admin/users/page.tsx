@@ -12,6 +12,7 @@ interface User {
 }
 
 export default function UsersPage() {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const [users, setUser] = useState<User[]>([]);
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
@@ -26,7 +27,7 @@ export default function UsersPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/users/",
+            `${API_URL}/api/users/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -47,7 +48,7 @@ export default function UsersPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            "http://127.0.0.1:8000/api/users/",
+            `${API_URL}/api/users/`,
             {
                 method: 'POST',
                 headers: {
@@ -92,7 +93,7 @@ export default function UsersPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/users/${selectedUser.id}/`,
+            `${API_URL}/api/users/${selectedUser.id}/`,
             {
                 method: "PATCH",
                 headers: {
@@ -137,7 +138,7 @@ export default function UsersPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            `http://127.0.0.1:8000/api/users/${user.id}/`,
+            `${API_URL}/api/users/${user.id}/`,
             {
                 method: 'PATCH',
                 headers: {
