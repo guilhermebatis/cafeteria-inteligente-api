@@ -190,7 +190,7 @@ def get_sales_stats():
                 )["avg"] or 0})
 
 
-def get_sales_by_day():
+def get_sales_by_thirty_days():
     thirty_days_ago = timezone.now() - timedelta(days=30)
     orders = (Order.objects.filter(is_completed=True,
                                     created_at__gte=thirty_days_ago)
@@ -284,7 +284,14 @@ def generate_sales_report():
     )
 
     elements.append(
-        Spacer(1, 20)
+        Paragraph(
+            "------------------------------------"
+        )
+    )
+
+    elements.append(
+        Paragraph(
+            "RESUMO")
     )
 
     elements.append(
@@ -296,45 +303,59 @@ def generate_sales_report():
 
     elements.append(
         Paragraph(
-            f"Receita Total: R$ {data_sales.get('total_revenue')}",
+            f"Receita de 30 dias: R$ {data_sales.get('total_revenue'):.2f}",
             styles["Normal"]
         )
     )
 
     elements.append(
         Paragraph(
-            f"Ticket Médio: R$ {data_sales.get('average_ticket')}",
+            f"Ticket Médio: R$ {data_sales.get('average_ticket'):.2f}",
             styles["Normal"]
         )
-    )
-
-    elements.append(
-        Spacer(1, 20)
     )
 
     elements.append(
         Paragraph(
-            "produtos mais vendidos",
+            "------------------------------------"
+        )
+    )
+
+    elements.append(
+        Paragraph(
+            "PRODUTOS MAIS VENDIDOS",
             styles["Normal"]
         )
     )
 
+    number = 0
     for product in top_products[:5]:
+        number += 1
         elements.append(
             Paragraph(
-                f"{product.get('name')} - {product.get('total_sold')} vendas",
+                f"{number}° {product.get('name')} - {product.get('total_sold')} vendas",
                 styles["Normal"]
             )
         )
 
     elements.append(
-        Spacer(1, 20)
+        Paragraph(
+            "------------------------------------"
+        )
     )
 
+    elements.append(
+        Paragraph(
+            "MELHORES CLIENTES"
+        )
+    )
+
+    number = 0
     for customer in top_customers[:5]:
+        number += 1
         elements.append(
             Paragraph(
-                f"{customer.get("name")} - R${customer.get("total_spent")}",
+                f"{number}° {customer.get("name")} - R${customer.get("total_spent")}",
                 styles["Normal"]
             )
         )

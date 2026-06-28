@@ -94,7 +94,7 @@ export default function AdminPage() {
             )
 
             const salesResponse = await fetch(
-                "http://127.0.0.1:8000/api/orders/sales_by_day/",
+                "http://localhost:8000/api/orders/sales_by_thirty_days/",
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,

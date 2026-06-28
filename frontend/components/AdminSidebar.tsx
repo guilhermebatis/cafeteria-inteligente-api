@@ -1,8 +1,38 @@
 "use client";
 
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function AdminSidebar() {
+
+    async function handleSalesReport() {
+
+        const token = localStorage.getItem('access')
+
+        const response = await fetch(
+            "http://localhost:8000/api/orders/sales_report_pdf/",
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            }
+        )
+
+        if (response.ok) {
+            const pdf = await response.blob()
+            const url = URL.createObjectURL(pdf)
+            const link = document.createElement("a")
+            document.body.appendChild(link);
+            link.href = url
+            link.download = "sales_report.pdf"
+            link.click()
+            link.remove();
+            URL.revokeObjectURL(url);
+        } else {
+            toast.error('error ao fazer download no relatorio de vendas')
+            return
+        }
+    }
 
     return (
 
@@ -81,6 +111,13 @@ export default function AdminSidebar() {
             >
                 Clientes
             </Link>
+
+            <button
+                onClick={handleSalesReport}
+                className="border p-2 rounded text-left cursor-pointer"
+            >
+                Relatório de vendas
+            </button>
 
         </aside>
     );

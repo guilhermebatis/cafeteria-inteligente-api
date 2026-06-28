@@ -15,7 +15,7 @@ from apps.orders.services import (add_item_to_order, remove_item_from_order,
                                   update_item_quantity, add_ingredient_to_product,
                                   update_ingredient_to_product, remove_ingredient_to_product,
                                   finalize_order, process_payment, generate_sales_report,
-                                  get_sales_stats, get_sales_by_day, get_top_products_sales)
+                                  get_sales_stats, get_sales_by_thirty_days, get_top_products_sales)
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
@@ -284,8 +284,8 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response(data)
 
     @action(detail=False, methods=['get'])
-    def sales_by_day(self, resquest):
-        orders = get_sales_by_day()
+    def sales_by_thirty_days(self, resquest):
+        orders = get_sales_by_thirty_days()
         return Response(list(orders))
 
     @action(detail=False, methods=['get'])
