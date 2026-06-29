@@ -13,7 +13,7 @@ interface Product {
 
 interface Order {
     id: number;
-    customer?: Number | null
+    customer?: Customer | null
     user: number;
     total_price: string;
     is_completed: boolean;
@@ -30,7 +30,7 @@ interface OrderItem {
 }
 
 interface Customer {
-    id: Number,
+    id: number,
     name: string,
     cpf: string,
     phone: string,

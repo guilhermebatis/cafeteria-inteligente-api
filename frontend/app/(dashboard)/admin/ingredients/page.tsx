@@ -233,7 +233,7 @@ export default function IngredientsPage() {
                     value={stockQuantity}
                     onChange={(e) =>
                         setStockQuantity(
-                            e.target.value
+                            Number(e.target.value)
                         )
                     }
                     className="border p-2 rounded"
@@ -245,7 +245,7 @@ export default function IngredientsPage() {
                     value={minimum_stock}
                     onChange={(e) =>
                         setMinimumStock(
-                            e.target.value
+                            Number(e.target.value)
                         )
                     }
                     className="border p-2 rounded"
