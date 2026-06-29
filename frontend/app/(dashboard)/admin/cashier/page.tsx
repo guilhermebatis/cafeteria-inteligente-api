@@ -30,7 +30,7 @@ interface OrderItem {
 }
 
 interface Customer {
-    id: Number,
+    id: number,
     name: string,
     cpf: string,
     phone: string,

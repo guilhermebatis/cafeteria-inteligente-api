@@ -5,7 +5,7 @@ import { toast, Toaster } from "sonner";
 import { useRouter } from "next/navigation";
 
 interface Customer {
-    id: Number,
+    id: number,
     name: string,
     cpf: String,
     phone: string,
