@@ -141,7 +141,7 @@ export default function ReceiptPage() {
                                     </span>
 
                                     <span>
-                                        R$ {(item.quantity * item.price).toFixed(2)}
+                                        R$ {(item.quantity * Number(item.price)).toFixed(2)}
                                     </span>
 
                                 </div>
