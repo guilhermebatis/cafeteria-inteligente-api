@@ -30,7 +30,7 @@ class Command(BaseCommand):
             self.style.SUCCESS("Seed finalizado!")
         )
 
-    def seed_categories(self):
+    def seed_categories(self) -> None:
 
         for categorie in CATEGORIES:
             Category.objects.get_or_create(
@@ -44,7 +44,7 @@ class Command(BaseCommand):
             self.style.SUCCESS("Categorias criadas!")
         )
 
-    def seed_ingredients(self):
+    def seed_ingredients(self) -> None:
 
         for ingredient in INGREDIENTS:
             Ingredient.objects.get_or_create(
@@ -59,7 +59,7 @@ class Command(BaseCommand):
             self.style.SUCCESS("Ingredientes criados!")
             )
 
-    def seed_products(self):
+    def seed_products(self) -> None:
 
         for product in PRODUCTS:
             Product.objects.get_or_create(
@@ -75,7 +75,7 @@ class Command(BaseCommand):
             self.style.SUCCESS("Produtos criados!")
         )
 
-    def seed_customers(self):
+    def seed_customers(self) -> None:
 
         for customer in CUSTOMERS:
             Customer.objects.get_or_create(
@@ -90,28 +90,40 @@ class Command(BaseCommand):
             self.style.SUCCESS("Clientes criados!")
         )
 
-    def seed_product_ingredients(self):
+    def seed_product_ingredients(self) -> None:
         for product_name, recipe in RECIPES.items():
             try:
                 product = Product.objects.get(name=product_name)
             except Product.DoesNotExist:
-                self.style.WARNING(f"Produto '{product_name}' não encontrado.")
+                self.stdout.write(
+                    self.style.WARNING(f"Produto '{product_name}' não encontrado.")
+                )
+                continue
 
-                for ingredient_name, quantity in recipe.items():
+            for ingredient_name, quantity in recipe:
+                try:
                     ingredient = Ingredient.objects.get(name=ingredient_name)
+
                     ProductIngredient.objects.get_or_create(
-                            product=product,
-                            ingredient=ingredient,
-                            defaults={
-                                "quantity": quantity,
-                            }
+                        product=product,
+                        ingredient=ingredient,
+                        defaults={
+                            "quantity": quantity,
+                        }
+                    )
+
+                except Ingredient.DoesNotExist:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"Ingrediente '{ingredient_name}' não encontrado."
+                        )
                     )
 
         self.stdout.write(
             self.style.SUCCESS("Receitas criadas!")
         )
 
-    def seed_users(self):
+    def seed_users(self) -> None:
         for user in USERS:
 
             if User.objects.filter(username=user["username"]).exists():
@@ -135,10 +147,10 @@ class Command(BaseCommand):
                 )
 
         self.stdout.write(
-            self.style.SUCCESS("Usuarios cliados!")
+            self.style.SUCCESS("Usuários criados!")
         )
 
-    def seed_orders(self):
+    def seed_orders(self) -> None:
         customers = Customer.objects.all()
         users = User.objects.all()
         products = Product.objects.all()
@@ -164,10 +176,9 @@ class Command(BaseCommand):
                     quantity=quantity,
                     price=product.price
                 )
-
-                days = random.randint(0, 40)
-                order.created_at = timezone.now() - timedelta(days=days)
-                order.save(update_fields=["created_at"])
+            days = random.randint(0, 40)
+            order.created_at = timezone.now() - timedelta(days=days)
+            order.save(update_fields=["created_at"])
 
         self.stdout.write(
             self.style.SUCCESS("Pedidos criados!")
