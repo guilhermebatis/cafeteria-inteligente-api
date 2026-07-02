@@ -65,7 +65,6 @@ class Order(models.Model):
     is_completed = models.BooleanField(default=False)
     paid_at = models.DateTimeField(null=True, blank=True)
 
-
     def __str__(self):
         return f'Order {self.id} - {self.user.username}'
 
