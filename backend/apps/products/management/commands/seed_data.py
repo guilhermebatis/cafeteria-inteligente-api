@@ -199,147 +199,147 @@ PRODUCTS = [
 INGREDIENTS = [
     {
         "name": "Café em grãos",
-        "stock_quantity": 5000,
+        "stock_quantity": 500000,
         "unit": "g",
         "minimum_stock": 500
     },
     {
         "name": "Leite Integral",
-        "stock_quantity": 20,
+        "stock_quantity": 2000,
         "unit": "l",
         "minimum_stock": 5
     },
     {
         "name": "Leite Desnatado",
-        "stock_quantity": 10,
+        "stock_quantity": 1000,
         "unit": "l",
         "minimum_stock": 2
     },
     {
         "name": "Leite Vegetal",
-        "stock_quantity": 10,
+        "stock_quantity": 1000,
         "unit": "l",
         "minimum_stock": 2
     },
     {
         "name": "Chocolate em pó",
-        "stock_quantity": 3000,
+        "stock_quantity": 300000,
         "unit": "g",
         "minimum_stock": 300
     },
     {
         "name": "Chocolate meio amargo",
-        "stock_quantity": 2000,
+        "stock_quantity": 200000,
         "unit": "g",
         "minimum_stock": 200
     },
     {
         "name": "Açúcar",
-        "stock_quantity": 5000,
+        "stock_quantity": 500000,
         "unit": "g",
         "minimum_stock": 500
     },
     {
         "name": "Adoçante",
-        "stock_quantity": 1500,
+        "stock_quantity": 150000,
         "unit": "ml",
         "minimum_stock": 200
     },
     {
         "name": "Canela",
-        "stock_quantity": 1000,
+        "stock_quantity": 100000,
         "unit": "g",
         "minimum_stock": 100
     },
     {
         "name": "Chantilly",
-        "stock_quantity": 5,
+        "stock_quantity": 500,
         "unit": "l",
         "minimum_stock": 1
     },
     {
         "name": "Calda de Chocolate",
-        "stock_quantity": 3000,
+        "stock_quantity": 300000,
         "unit": "ml",
         "minimum_stock": 300
     },
     {
         "name": "Calda de Caramelo",
-        "stock_quantity": 3000,
+        "stock_quantity": 300000,
         "unit": "ml",
         "minimum_stock": 300
     },
     {
         "name": "Baunilha",
-        "stock_quantity": 1000,
+        "stock_quantity": 100000,
         "unit": "ml",
         "minimum_stock": 100
     },
     {
         "name": "Água Filtrada",
-        "stock_quantity": 50,
+        "stock_quantity": 5000,
         "unit": "l",
         "minimum_stock": 10
     },
     {
         "name": "Gelo",
+        "stock_quantity": 100000,
+        "unit": "g",
+        "minimum_stock": 10000
+    },
+    {
+        "name": "Chá Preto",
+        "stock_quantity": 100000,
+        "unit": "g",
+        "minimum_stock": 1000
+    },
+    {
+        "name": "Chá Verde",
         "stock_quantity": 10000,
         "unit": "g",
         "minimum_stock": 1000
     },
     {
-        "name": "Chá Preto",
-        "stock_quantity": 1000,
-        "unit": "g",
-        "minimum_stock": 100
-    },
-    {
-        "name": "Chá Verde",
-        "stock_quantity": 1000,
-        "unit": "g",
-        "minimum_stock": 100
-    },
-    {
         "name": "Camomila",
-        "stock_quantity": 1000,
+        "stock_quantity": 10000,
         "unit": "g",
-        "minimum_stock": 100
+        "minimum_stock": 1000
     },
     {
         "name": "Pão de Queijo (massa)",
-        "stock_quantity": 3000,
+        "stock_quantity": 30000,
         "unit": "g",
-        "minimum_stock": 500
+        "minimum_stock": 5000
     },
     {
         "name": "Farinha de Trigo",
-        "stock_quantity": 5000,
+        "stock_quantity": 50000,
         "unit": "g",
-        "minimum_stock": 500
+        "minimum_stock": 5000
     },
     {
         "name": "Manteiga",
-        "stock_quantity": 2000,
+        "stock_quantity": 20000,
         "unit": "g",
-        "minimum_stock": 300
+        "minimum_stock": 3000
     },
     {
         "name": "Queijo Mussarela",
-        "stock_quantity": 3000,
+        "stock_quantity": 30000,
         "unit": "g",
-        "minimum_stock": 500
+        "minimum_stock": 5000
     },
     {
         "name": "Presunto",
-        "stock_quantity": 3000,
+        "stock_quantity": 30000,
         "unit": "g",
-        "minimum_stock": 500
+        "minimum_stock": 5000
     },
     {
         "name": "Frango Desfiado",
-        "stock_quantity": 3000,
+        "stock_quantity": 30000,
         "unit": "g",
-        "minimum_stock": 500
+        "minimum_stock": 5000
     },
 ]
 
@@ -644,40 +644,6 @@ STOCK_MOVEMENTS = [
         "movement_type": "IN",
         "reason": "Compra inicial de fornecedor",
     },
-
-    # Saídas por consumo em produção (baseadas nos pedidos do seed)
-    {
-        "ingredient": "Café em grãos",
-        "quantity": 90,
-        "movement_type": "OUT",
-        "reason": "Consumo em produção - pedidos do dia",
-    },
-    {
-        "ingredient": "Leite Integral",
-        "quantity": 0.6,
-        "movement_type": "OUT",
-        "reason": "Consumo em produção - pedidos do dia",
-    },
-    {
-        "ingredient": "Chocolate em pó",
-        "quantity": 20,
-        "movement_type": "OUT",
-        "reason": "Consumo em produção - pedidos do dia",
-    },
-    {
-        "ingredient": "Farinha de Trigo",
-        "quantity": 55,
-        "movement_type": "OUT",
-        "reason": "Consumo em produção - pedidos do dia",
-    },
-    {
-        "ingredient": "Queijo Mussarela",
-        "quantity": 65,
-        "movement_type": "OUT",
-        "reason": "Consumo em produção - pedidos do dia",
-    },
-
-    # Ajustes e perdas
     {
         "ingredient": "Leite Vegetal",
         "quantity": 1,

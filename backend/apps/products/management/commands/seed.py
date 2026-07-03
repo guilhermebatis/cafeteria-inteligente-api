@@ -3,13 +3,14 @@ from typing import Any
 from django.core.management.base import BaseCommand
 from apps.products.models import (Category, Ingredient, Product,
                                   Customer, ProductIngredient, User, OrderItem,
-                                  Order)
+                                  Order, StockMovement)
 from django.utils.text import slugify
 from .seed_data import (CATEGORIES, INGREDIENTS, PRODUCTS,
-                        CUSTOMERS, USERS, RECIPES)
+                        CUSTOMERS, USERS, RECIPES, STOCK_MOVEMENTS)
 import random
 from datetime import timedelta
 from django.utils import timezone
+from apps.orders.services import finalize_order
 
 
 class Command(BaseCommand):
@@ -162,7 +163,7 @@ class Command(BaseCommand):
             order = Order.objects.create(
                 customer=customer,
                 user=user,
-                is_completed=random.choice([True, True, True, False]),
+                is_completed=False,
             )
             quantity_products = random.randint(1, 5)
             chosen_products = random.sample(list(products),
@@ -179,7 +180,25 @@ class Command(BaseCommand):
             days = random.randint(0, 40)
             order.created_at = timezone.now() - timedelta(days=days)
             order.save(update_fields=["created_at"])
+            if random.choice([True, True, True, False]):
+                finalize_order(order)
 
         self.stdout.write(
             self.style.SUCCESS("Pedidos criados!")
+        )
+
+    def seed_stock_movements(self) -> None:
+
+        for movement in STOCK_MOVEMENTS:
+            ingredient = Ingredient.objects.get(name=movement["ingredient"])
+            StockMovement.objects.get_or_create(
+                ingredient=ingredient,
+                defaults={
+                    "quantity": movement["quantity"],
+                    "movement_type": movement["movement_type"],
+                    "reason": movement["reason"],
+                }
+            )
+        self.stdout.write(
+            self.style.SUCCESS("movimentação de estoque criados!")
         )

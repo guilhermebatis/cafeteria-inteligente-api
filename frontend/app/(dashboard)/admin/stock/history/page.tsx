@@ -36,7 +36,6 @@ export default function StockHistoryPage() {
         );
 
         const data = await response.json();
-
         setMovements(data);
     }
 
