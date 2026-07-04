@@ -152,6 +152,13 @@ class Command(BaseCommand):
         )
 
     def seed_orders(self) -> None:
+
+        if Order.objects.exists():
+            self.stdout.write(
+                self.style.WARNING("Pedidos já existem. Pulando...")
+            )
+            return
+
         customers = Customer.objects.all()
         users = User.objects.all()
         products = Product.objects.all()
