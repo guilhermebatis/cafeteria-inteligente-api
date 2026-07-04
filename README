@@ -1,0 +1,166 @@
+# ☕ Cafeteria Inteligente
+
+Sistema full-stack de uma cafeteria inteligente com autenticação JWT, catálogo de produtos, carrinho de compras e histórico de pedidos.
+
+---
+
+## 🚀 Visão geral
+
+O projeto simula uma cafeteria digital onde usuários podem:
+
+- Fazer login com autenticação JWT
+- Visualizar produtos disponíveis
+- Adicionar itens ao carrinho
+- Finalizar pedidos
+- Consultar histórico de compras
+
+---
+
+## Usuarios
+
+login = admin
+senha = admin123
+
+## 🧱 Arquitetura
+
+Frontend (Next.js) → Backend (Django REST API) → PostgreSQL
+
+---
+
+## ⚙️ Tecnologias
+
+### Backend
+
+- Django
+- Django REST Framework
+- SimpleJWT
+- Django Filters
+- PostgreSQL
+- CORS Headers
+
+### Frontend
+
+- Next.js
+- React
+- TypeScript
+- TailwindCSS
+- Sonner (toast notifications)
+
+---
+
+## 🔐 Autenticação
+
+O sistema usa JWT:
+
+- `access token` para requisições
+- `refresh token` para renovação
+- Armazenamento no `localStorage`
+
+Header usado:
+
+```http
+Authorization: Bearer <token>
+```
+
+## 📡 API Endpoints principais
+
+Auth
+POST /api/token/ → login
+POST /api/token/refresh/ → refresh token
+Produtos
+GET /api/products/ → lista produtos
+Pedidos
+POST /api/orders/ → cria pedido
+GET /api/orders/<id>/ → detalhes do pedido
+POST /api/orders/<id>/add_item/ → adiciona item
+
+## 🧠 Funcionalidades
+
+Usuário
+Login/logout
+Visualizar produtos
+Adicionar ao carrinho
+Ver histórico de pedidos
+Sistema
+Seed automático de banco
+API REST estruturada
+CORS configurado para frontend
+Deploy em produção
+
+## 🌍 Deploy
+
+Produção
+Frontend: Railway
+Backend: Railway
+Banco de dados: PostgreSQL (Railway)
+
+## ⚙️ Variáveis de ambiente
+
+Backend
+SECRET_KEY=
+DEBUG=False
+ALLOWED_HOSTS=\*
+DATABASE_URL=
+CORS_ALLOWED_ORIGINS=
+
+## Frontend
+
+NEXT_PUBLIC_API_URL=https://cafeteria-inteligente-frontend-production.up.railway.app/
+
+## 🐳 Execução com Docker (opcional)
+
+docker compose up --build
+
+## 💻 Execução local
+
+Backend
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+Frontend
+cd frontend
+npm install
+npm run dev
+
+## 📦 Estrutura do projeto
+
+cafeteria-inteligente/
+│
+├── backend/
+│ ├── config/
+│ ├── apps/
+│ ├── manage.py
+│
+├── frontend/
+│ ├── app/
+│ ├── components/
+│ ├── pages/
+│ ├── package.json
+│
+├── docker-compose.yml
+└── README.md
+
+## 🏷️ Versão
+
+v1.0.0 - Primeira versão estável
+
+Login funcionando
+API integrada
+Carrinho funcional
+Deploy em produção
+
+## ✨ Próximos passos (roadmap)
+
+Pagamento real (Stripe/Mercado Pago)
+Painel admin
+Upload de imagens
+Sistema de avaliações
+Cache de produtos
+Otimização de performance
+
+## 👨‍💻 Autor
+
+Projeto desenvolvido por Guilherme.
