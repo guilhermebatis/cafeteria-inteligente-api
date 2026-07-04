@@ -26,8 +26,8 @@ O projeto simula uma cafeteria digital onde usuários podem:
 ## 🚀 Quick Start (1 command)
 
 ````bash
-git clone https://github.com/seu-repo/cafeteria-inteligente
-cd cafeteria-inteligente
+git clone https://github.com/guilhermebatis/cafeteria-inteligente-api
+cd cafeteria-inteligente-api
 docker compose up --build
 
 ## Usuarios
