@@ -9,10 +9,6 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  console.log(username);
-  console.log(password);
-  console.log("API_URL =", API_URL);
-
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
 
