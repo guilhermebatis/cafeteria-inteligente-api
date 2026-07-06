@@ -25,15 +25,17 @@ O projeto simula uma cafeteria digital onde usuários podem:
 
 ## 🚀 Quick Start (1 command)
 
-````bash
+```bash
 git clone https://github.com/guilhermebatis/cafeteria-inteligente-api
 cd cafeteria-inteligente-api
 docker compose up --build
+```
 
-## Usuarios
+### Criar um superusuário
 
-login = admin
-senha = admin123
+```bash
+docker compose exec backend python manage.py createsuperuser
+```
 
 ## 🧱 Arquitetura
 
@@ -74,7 +76,7 @@ Header usado:
 
 ```http
 Authorization: Bearer <token>
-````
+```
 
 ## 📡 API Endpoints principais
 

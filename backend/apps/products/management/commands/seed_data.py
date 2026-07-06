@@ -521,13 +521,6 @@ CUSTOMERS = [
 
 USERS = [
     {
-        "username": "admin",
-        "email": "admin@example.com",
-        "password": "admin123",
-        "is_staff": True,
-        "is_superuser": True
-    },
-    {
         "username": "caixa1",
         "email": "caixa1@example.com",
         "password": "caixa123",

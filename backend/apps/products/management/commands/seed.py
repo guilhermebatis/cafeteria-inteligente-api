@@ -130,21 +130,12 @@ class Command(BaseCommand):
             if User.objects.filter(username=user["username"]).exists():
                 continue
 
-            if user["is_superuser"]:
-                User.objects.create_superuser(
-                    username=user["username"],
-                    email=user["email"],
-                    password=user["password"],
-                    is_staff=user["is_staff"],
-                )
-            else:
-                User.objects.get_or_create(
-                    username=user["username"],
-                    defaults={
-                        "email": user["email"],
-                        "is_staff": user["is_staff"],
-                        "is_superuser": user["is_superuser"],
-                    }
+            User.objects.create_user(
+                username=user["username"],
+                email=user["email"],
+                is_staff=user["is_staff"],
+                password=user["password"],
+                is_superuser=user["is_superuser"],
                 )
 
         self.stdout.write(
