@@ -1,13 +1,15 @@
+# ☕ Cafeteria Inteligente
+
+Sistema Full Stack para gerenciamento de uma cafeteria, desenvolvido com Django REST Framework e Next.js.
+
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
 ![Django](https://img.shields.io/badge/Django-6.0-green)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)
+![JWT](https://img.shields.io/badge/Auth-JWT-orange)
+![Railway](https://img.shields.io/badge/Deploy-Railway-purple)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-
-# ☕ Cafeteria Inteligente
-
-Sistema full-stack de uma cafeteria inteligente com autenticação JWT, catálogo de produtos, carrinho de compras e histórico de pedidos.
 
 ---
 
