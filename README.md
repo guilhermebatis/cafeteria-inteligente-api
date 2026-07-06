@@ -33,11 +33,17 @@ cd cafeteria-inteligente-api
 docker compose up --build
 ```
 
-### Criar um superusuário
+## Usuário de demonstração
 
-```bash
+Após executar o comando de seed, será criado um usuário de demonstração:
+
+- Usuário: `caixa1`
+- senha: `caixa123`
+
+Caso deseje acessar o Django Admin, crie um superusuário:
+
+````bash
 docker compose exec backend python manage.py createsuperuser
-```
 
 ## 🧱 Arquitetura
 
@@ -78,7 +84,7 @@ Header usado:
 
 ```http
 Authorization: Bearer <token>
-```
+````
 
 ## 📡 API Endpoints principais
 
@@ -173,11 +179,16 @@ Deploy em produção
 ## ✨ Próximos passos (roadmap)
 
 Pagamento real (Stripe/Mercado Pago)
-Painel admin
 Upload de imagens
 Sistema de avaliações
 Cache de produtos
 Otimização de performance
+
+## 🔗 Links
+
+- 🌐 Frontend: https://cafeteria-inteligente-frontend-production.up.railway.app
+- 🚀 Backend: https://cafeteria-inteligente-api-backend.up.railway.app
+- 📖 Swagger: https://cafeteria-inteligente-api-backend.up.railway.app/api/docs/
 
 ## 👨‍💻 Autor
 
