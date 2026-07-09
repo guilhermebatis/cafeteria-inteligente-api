@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
-import { usePathname } from "next/navigation";
+import { toast } from "sonner";
 
 interface LayoutClientProps {
     children: React.ReactNode;
@@ -14,17 +14,6 @@ export default function LayoutClient({
 
     const API_URL = process.env.NEXT_PUBLIC_API_URL
     const [totalItems, setTotalItems] = useState(0);
-    const pathname = usePathname();
-    const hideNavbarRoutes = [
-        "/admin",
-        "/products",
-        "/ingredients",
-        "/stock",
-    ];
-    const shouldHideNavbar =
-        hideNavbarRoutes.some((route) =>
-            pathname.startsWith(route)
-        );
 
     async function fetchCart() {
 
@@ -47,6 +36,11 @@ export default function LayoutClient({
                 },
             }
         );
+
+        if (!response.ok) {
+            toast.error("Erro ao buscar o carrinho");
+            return;
+        }
 
         const data = await response.json();
 
@@ -91,12 +85,10 @@ export default function LayoutClient({
     return (
 
         <>
-            {!shouldHideNavbar && (
-                <Navbar
-                    totalItems={totalItems}
-                    onLogout={handleLogout}
-                />
-            )}
+            <Navbar
+                totalItems={totalItems}
+                onLogout={handleLogout}
+            />
 
             {children}
         </>
