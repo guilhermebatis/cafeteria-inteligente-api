@@ -10,16 +10,12 @@ export default function SiteLayout({
 
 
     return (
-        <main className="flex min-h-screen">
-
+        <main className="flex flex-col min-h-screen">
             <NavbarProvider>
-
                 <div className="flex-1 p-10">
                     {children}
                 </div>
-
             </NavbarProvider>
-
         </main>
     );
 }

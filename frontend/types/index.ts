@@ -36,3 +36,11 @@ export interface Customer {
     email: string;
     is_active: boolean;
 }
+
+export interface User {
+    id: number;
+    username: string;
+    email: string;
+    is_active: boolean;
+    is_staff: boolean;
+}
