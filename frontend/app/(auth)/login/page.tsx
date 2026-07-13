@@ -1,50 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
-  const router = useRouter();
+  const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
 
-    const response = await fetch(
-      `${API_URL}/api/token/`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          password,
-        }),
-      }
-    );
+    await login(username, password);
 
-    const data = await response.json();
-
-    console.log(data);
-    localStorage.setItem("access", data.access);
-    localStorage.setItem("refresh", data.refresh);
-
-    const meresponse = await fetch(
-      `${API_URL}/api/users/me/`,
-      {
-        headers: {
-          Authorization: `Bearer ${data.access}`,
-        }
-      })
-    console.log(meresponse.status);
-    const meData = await meresponse.json()
-
-    localStorage.setItem("is_staff", String(meData.is_staff),)
-
-    router.push("/");
   }
 
   return (

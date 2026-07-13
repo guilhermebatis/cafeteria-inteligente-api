@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
     LineChart,
     Line,
@@ -17,7 +16,6 @@ export default function AdminPage() {
     const [productsCount, setProductsCount] = useState(0);
     const [ingredientsCount, setIngredientsCount] = useState(0);
     const [lowStockIngredients, setLowStockIngredients] = useState<any[]>([]);
-    const router = useRouter();
     const [stats, setStats] = useState({
         orders_count: 0,
         total_revenue: 0,
@@ -30,9 +28,6 @@ export default function AdminPage() {
 
     async function fetchDashboardData() {
         try {
-            const isStaff = localStorage.getItem("is_staff");
-            if (isStaff !== "true") { router.push("/"); }
-
             const token = localStorage.getItem("access");
 
             const productsResponse = await fetch(
@@ -136,25 +131,9 @@ export default function AdminPage() {
 
     useEffect(() => {
 
-        const token = localStorage.getItem("access");
-
-        if (!token) {
-            router.push("/login");
-            return;
-        }
-
-
-    }, []);
-
-    useEffect(() => {
-
         fetchDashboardData();
 
     }, []);
-
-
-
-
 
     return (
 

@@ -8,8 +8,12 @@ export default function SiteLayout({
     children: React.ReactNode;
 }) {
     return (
-        <NavbarProvider>
-            {children}
-        </NavbarProvider>
+        <main className="flex flex-col min-h-screen">
+            <NavbarProvider>
+                <div className="flex-1 p-10">
+                    {children}
+                </div>
+            </NavbarProvider>
+        </main>
     );
 }

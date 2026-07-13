@@ -73,21 +73,11 @@ export default function LayoutClient({
 
     }, []);
 
-    function handleLogout() {
-
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        localStorage.removeItem("order_id");
-
-        window.location.href = "/login";
-    }
-
     return (
 
         <>
             <Navbar
                 totalItems={totalItems}
-                onLogout={handleLogout}
             />
 
             {children}
