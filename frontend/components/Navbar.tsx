@@ -2,18 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NavbarProps {
     totalItems: number;
-    onLogout: () => void;
 }
 
 export default function Navbar({
     totalItems,
-    onLogout,
 }: NavbarProps) {
 
     const pathname = usePathname();
+    const { logout, user } = useAuth();
 
     if (pathname === "/login" || pathname.startsWith("/receipt")) {
         return null;
@@ -51,7 +51,7 @@ export default function Navbar({
                 </Link>
 
                 <button
-                    onClick={onLogout}
+                    onClick={logout}
                     className="border px-4 py-2 rounded"
                 >
                     Logout

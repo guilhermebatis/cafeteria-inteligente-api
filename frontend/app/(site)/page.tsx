@@ -15,14 +15,6 @@ export default function Home() {
   const [history, setHistory] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-
-  function handleLogout() {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    localStorage.removeItem("order_id");
-    router.push("/login");
-  }
-
   async function fetchOrder() {
     const token = localStorage.getItem("access");
 
@@ -97,11 +89,6 @@ export default function Home() {
   async function fetchProducts() {
     const token = localStorage.getItem("access");
 
-    if (!token) {
-      router.push("/login");
-      return
-    }
-
     const response = await fetch(
       `${API_URL}/api/products/`,
       {
@@ -111,11 +98,6 @@ export default function Home() {
       }
     );
 
-    if (!response.ok) {
-      router.push("/login");
-      return;
-    }
-
     const data = await response.json();
 
     setProducts(data);
@@ -124,12 +106,6 @@ export default function Home() {
 
   useEffect(() => {
     const token = localStorage.getItem("access");
-
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
     fetchOrder();
     fetchProducts()
   }, []);

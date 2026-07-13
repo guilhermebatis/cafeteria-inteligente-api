@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/AdminSidebar";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function AdminLayout({
     children,
@@ -11,37 +12,16 @@ export default function AdminLayout({
 }) {
 
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
-
-    async function checkAuth(token: string | null) {
-
-        const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/users/me/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            }
-        );
-        if (!response.ok) {
-            localStorage.removeItem("access");
-            localStorage.removeItem("refresh");
-            router.replace('/login');
-            return;
-        }
-        setLoading(false);
-    }
+    const {
+        user,
+        loading,
+    } = useAuth();
 
     useEffect(() => {
-
-        const token = localStorage.getItem('access');
-
-        if (!token) {
-            router.replace('/login');
-            return;
+        if (!loading && (!user || !user.is_staff)) {
+            router.replace("/login");
         }
-        checkAuth(token)
-    }, []);
+    }, [loading, user, router]);
 
     if (loading) {
         return (
@@ -49,6 +29,10 @@ export default function AdminLayout({
                 <p>Carregando...</p>
             </div>
         );
+    }
+
+    if (!user || !user.is_staff) {
+        return null;
     }
 
     return (

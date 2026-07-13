@@ -79,11 +79,6 @@ export default function ProductsPage() {
 
         const token = localStorage.getItem('access')
 
-        if (!token) {
-            router.push("/login");
-            return;
-        }
-
         const response = await fetch(
             `${API_URL}/api/products/`,
             {
