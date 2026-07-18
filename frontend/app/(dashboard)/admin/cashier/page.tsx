@@ -95,7 +95,7 @@ export default function CashierPage() {
         const token = localStorage.getItem('access')
 
         const response = await fetch(
-            "${API_URL}/api/customers/",
+            `${API_URL}/api/customers/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,

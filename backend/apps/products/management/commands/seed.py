@@ -80,10 +80,10 @@ class Command(BaseCommand):
 
         for customer in CUSTOMERS:
             Customer.objects.get_or_create(
-                name=customer["name"],
+                cpf=customer["cpf"],
                 defaults={
+                    "name": customer["name"],
                     "email": customer["email"],
-                    "cpf": customer["cpf"],
                     "phone": customer["phone"],
                 }
             )

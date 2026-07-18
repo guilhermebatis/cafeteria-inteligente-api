@@ -517,6 +517,12 @@ CUSTOMERS = [
         "phone": "11967890123",
         "email": "elisa.ramos@example.com"
     },
+    {
+        "name": "Consumidor Final",
+        "cpf": "00000000000",
+        "phone": "",
+        "email": ""
+    },
 ]
 
 USERS = [
