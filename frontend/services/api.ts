@@ -1,87 +1,45 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
+
 function getToken() {
-    const token = localStorage.getItem('access')
-    if (token == null){
-          throw new Error("Token is null.")
+    const token = localStorage.getItem('access');
+    if (token == null) {
+        throw new Error('Token is null.');
     }
-    return token
+    return token;
 }
 
-async function post(caminho: string, data: any) {
-    
-    const response = await fetch(`${API_URL}${caminho}`,
-        {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${getToken()}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data) 
-        },
-    )
+async function request(method: HttpMethod, caminho: string, data?: unknown) {
+    const token = getToken();
 
+    const response = await fetch(`${API_URL}${caminho}`, {
+        method,
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: data ? JSON.stringify(data) : undefined,
+    });
     if (!response.ok) {
-        throw new Error("POST request failed.")
+        throw new Error(`${method} request failed.`);
     }
-    
     return await response.json();
-    
-    }
+}
+
+async function post(caminho: string, data: unknown) {
+    return request('POST', caminho, data);
+}
 
 async function get(caminho: string) {
-    const response = await fetch(`${API_URL}${caminho}`,
-        {   
-            method:"GET",
-            headers: {
-                Authorization: `Bearer ${getToken()}`,
-            }
-            
-        }
-    )
+    return request('GET', caminho);
+}
 
-    if (!response.ok) {
-    throw new Error("GET request failed.")
-    }
-    
-    return await response.json();
-    
-    }
-
-
-async function update(caminho: string, data: any) {
-    const response = await fetch(`${API_URL}${caminho}`,
-        {
-            method: "PATCH",
-            headers: {
-                Authorization: `Bearer ${getToken()}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data) 
-        }
-    )
-    if (!response.ok) {
-    throw new Error("PATCH request failed.")
-    }
-    
-    return await response.json();
-    
+async function update(caminho: string, data: unknown) {
+    return request('PATCH', caminho, data);
 }
 
 async function remove(caminho: string) {
-        const response = await fetch(`${API_URL}${caminho}`,
-        {
-            method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${getToken()}`,
-                "Content-Type": "application/json",
-            },
-        }
-    )
-    if (!response.ok) {
-    throw new Error("DELETE request failed.")
-    }
-    
-    return await response.json();
+    return request('DELETE', caminho);
 }
-
+export { get, post, update, remove };
