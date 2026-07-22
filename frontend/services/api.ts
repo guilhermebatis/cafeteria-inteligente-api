@@ -10,7 +10,7 @@ function getToken() {
     return token;
 }
 
-async function request(method: HttpMethod, caminho: string, data?: unknown) {
+async function request<T>(method: HttpMethod, caminho: string, data?: unknown) {
     const token = getToken();
 
     const response = await fetch(`${API_URL}${caminho}`, {
@@ -21,25 +21,34 @@ async function request(method: HttpMethod, caminho: string, data?: unknown) {
         },
         body: data ? JSON.stringify(data) : undefined,
     });
-    if (!response.ok) {
+    if (response.status === 204) {
+        return;
+    }
+    let json;
+    try {
+        json = await response.json();
+    } catch {
         throw new Error(`${method} request failed.`);
     }
-    return await response.json();
+    if (!response.ok) {
+        throw new Error(json.detail ?? json.message ?? json.error ?? `${method} request failed.`);
+    }
+    return json as T;
 }
 
-async function post(caminho: string, data: unknown) {
-    return request('POST', caminho, data);
+async function post<T>(caminho: string, data: unknown) {
+    return request<T>('POST', caminho, data);
 }
 
-async function get(caminho: string) {
-    return request('GET', caminho);
+async function get<T>(caminho: string) {
+    return request<T>('GET', caminho);
 }
 
-async function update(caminho: string, data: unknown) {
-    return request('PATCH', caminho, data);
+async function update<T>(caminho: string, data: unknown) {
+    return request<T>('PATCH', caminho, data);
 }
 
-async function remove(caminho: string) {
-    return request('DELETE', caminho);
+async function remove<T>(caminho: string) {
+    return request<T>('DELETE', caminho);
 }
 export { get, post, update, remove };
