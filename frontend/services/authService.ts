@@ -1,20 +1,12 @@
 import { post, get } from './api';
-
-interface LoginData {
-    username: string;
-    password: string;
-}
-interface LoginResponse {
-    access: string;
-    refresh: string;
-}
-
+import { LoginData, LoginResponse, MeResponse } from '../types/auth';
 const AuthService = {
     login(data: LoginData) {
         return post<LoginResponse>('/api/token/', data);
     },
-    me() {},
-    logout() {},
+    me() {
+        return get<MeResponse>('/api/users/me/');
+    },
 };
 
 export default AuthService;

@@ -1,10 +1,13 @@
 "use client";
 
+import { LoginData } from '../types/auth';
+import AuthService from "../services/authService"
 import { useState, useEffect } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import type { User } from "@/types";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
+import { error } from 'console';
 
 interface AuthProviderProps {
     children: React.ReactNode;
@@ -13,7 +16,6 @@ interface AuthProviderProps {
 export default function AuthProvider({
     children,
 }: AuthProviderProps) {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const router = useRouter();
 
     const [user, setUser] =
@@ -30,53 +32,37 @@ export default function AuthProvider({
             return;
         }
 
-        const response = await fetch(
-            `${API_URL}/api/users/me/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            }
-        )
-
-        if (response.ok) {
-            const data = await response.json();
-            setUser(data);
-        } else {
+        try {
+            const response = await AuthService.me()
+            setUser(response)
+        } catch (error) {
+            setUser(null)
             toast.error("Failed to fetch user data");
-            setUser(null);
+
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }
 
     async function login(username: string,
         password: string) {
+        try {
+            const response = await AuthService.login({
+                username,
+                password
+            })
 
-        const response = await fetch(
-            `${API_URL}/api/token/`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    username,
-                    password,
-                }),
+            localStorage.setItem("access", response.access);
+            localStorage.setItem("refresh", response.refresh);
+            await fetchUser();
+            router.push("/");
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Failed to login.");
             }
-        );
-        if (!response.ok) {
-            toast.error("Login failed");
-            return;
         }
-        const data = await response.json();
-
-        localStorage.setItem("access", data.access);
-        localStorage.setItem("refresh", data.refresh);
-
-        await fetchUser();
-
-        router.push("/");
     }
 
     function logout() {
