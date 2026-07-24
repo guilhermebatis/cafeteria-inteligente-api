@@ -10,20 +10,25 @@ function getToken() {
     return token;
 }
 
-async function request<T>(method: HttpMethod, caminho: string, data?: unknown) {
-    const token = getToken();
+async function request<T>(
+    method: HttpMethod,
+    caminho: string,
+    data?: unknown,
+    requiresAuth: boolean = true
+) {
+    const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+    };
+    if (requiresAuth) {
+        headers.Authorization = `Bearer ${getToken()}`;
+    }
 
     const response = await fetch(`${API_URL}${caminho}`, {
         method,
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
+        headers,
         body: data ? JSON.stringify(data) : undefined,
     });
-    if (response.status === 204) {
-        return;
-    }
+
     let json;
     try {
         json = await response.json();
@@ -36,19 +41,19 @@ async function request<T>(method: HttpMethod, caminho: string, data?: unknown) {
     return json as T;
 }
 
-async function post<T>(caminho: string, data: unknown) {
-    return request<T>('POST', caminho, data);
+async function post<T>(caminho: string, data: unknown, requiresAuth = true) {
+    return request<T>('POST', caminho, data, requiresAuth);
 }
 
-async function get<T>(caminho: string) {
-    return request<T>('GET', caminho);
+async function get<T>(caminho: string, requiresAuth = true) {
+    return request<T>('GET', caminho, undefined, requiresAuth);
 }
 
-async function update<T>(caminho: string, data: unknown) {
-    return request<T>('PATCH', caminho, data);
+async function update<T>(caminho: string, data: unknown, requiresAuth = true) {
+    return request<T>('PATCH', caminho, data, requiresAuth);
 }
 
-async function remove<T>(caminho: string) {
-    return request<T>('DELETE', caminho);
+async function remove<T>(caminho: string, requiresAuth = true) {
+    return request<T>('DELETE', caminho, undefined, requiresAuth);
 }
 export { get, post, update, remove };

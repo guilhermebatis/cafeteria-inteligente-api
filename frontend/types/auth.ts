@@ -7,7 +7,7 @@ export interface LoginResponse {
     refresh: string;
 }
 export interface MeResponse {
-    id: string;
+    id: number;
     username: string;
     email: string;
     is_staff: boolean;
