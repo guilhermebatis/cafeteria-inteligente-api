@@ -3,39 +3,15 @@
 import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
 import { useRouter } from "next/navigation";
-
-interface Category {
-    id: number;
-    name: string;
-    slug: string;
-}
-
-interface Product {
-    id: number;
-    name: string;
-    description: string;
-    price: string;
-    is_available: boolean;
-    category: Category;
-    ingredients: ProductIngredient[];
-    barcode: string;
-}
-
-interface Ingredient {
-    id: number;
-    name: string;
-    unit: string;
-}
-
-interface ProductIngredient {
-    ingredient: Ingredient;
-    quantity: string;
-}
+import ProductService from "@/services/productService";
+import CategoryService from '@/services/categoryService'
+import IngredientsService from '@/services/ingredientsService'
+import { Product, UpdateProduct, CreateProduct, UpdateIngredient } from '@/types/products';
+import { Category } from '@/types/categories'
+import { Ingredient } from "@/types/ingredients";
 
 
 export default function ProductsPage() {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    const router = useRouter();
     const [products, setProducts] = useState<Product[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [name, setName] = useState("");
@@ -56,69 +32,62 @@ export default function ProductsPage() {
         useState("");
     const [barcode, setBarcode] = useState("");
 
-    async function fetchIngredients() {
-
-        const token = localStorage.getItem("access");
-
-        const response = await fetch(
-            `${API_URL}/api/ingredients/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-
-        const data = await response.json();
-
-        setIngredients(data);
+    function resetForm() {
+        setName('')
+        setDescription('')
+        setCategoryId('')
+        setBarcode('')
+        setPrice('')
+        setIsAvailable(true)
     }
 
+    async function fetchIngredients() {
+        try {
+            const response = await IngredientsService.getingredients()
+
+            setIngredients(response);
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
+        }
+    }
 
     async function fetchProducts() {
+        try {
+            const response = await ProductService.getProducts()
 
-        const token = localStorage.getItem('access')
+            setProducts(response);
 
-        const response = await fetch(
-            `${API_URL}/api/products/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            return response;
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
             }
-        );
-
-        if (!response.ok) {
-            toast.error("Erro ao buscar produtos");
             return [];
+
         }
-
-        const data = await response.json()
-
-        setProducts(data);
-
-        return data || [];
     }
-
-
 
 
     async function fetchCategories() {
+        try {
+            const response = await CategoryService.getCategory()
 
-        const token = localStorage.getItem("access");
+            setCategories(response);
 
-        const response = await fetch(
-            `${API_URL}/api/categories/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
             }
-        );
 
-        const data = await response.json();
-
-        setCategories(data);
+        }
     }
 
     useEffect(() => {
@@ -133,72 +102,46 @@ export default function ProductsPage() {
 
         e.preventDefault();
 
-        const token = localStorage.getItem('access')
+        const data: CreateProduct = {
+            name,
+            description,
+            price: Number(price),
+            is_available: isAvailable,
+            category_id: Number(categoryId),
+            barcode: Number(barcode)
+        }
+        try {
+            await ProductService.createProduct(data)
 
-        const response = await fetch(
-            `${API_URL}/api/products/`,
-            {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
+            toast.success('new product create')
 
-                body: JSON.stringify({
-                    name: name,
-                    description: description,
-                    price: Number(price),
-                    is_available: isAvailable,
-                    category_id: Number(categoryId),
-                    barcode: barcode
+            resetForm()
 
-                }),
+            await fetchProducts()
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
             }
-        );
-
-        setName('')
-        setDescription('')
-        setPrice('0')
-        setIsAvailable(true)
-
-
-        if (response.ok) {
-            toast.success('Produto criado com sucesso')
         }
-
-        else {
-            toast.error('error a criar o produto')
-        }
-
-
-        fetchProducts()
     }
 
 
     async function handleDeleteProduct(id: number) {
+        try {
+            await ProductService.deleteProduct(id)
 
-        const token = localStorage.getItem('access')
-
-        const response = await fetch(
-            `${API_URL}/api/products/${id}/`,
-
-            {
-                method: 'DELETE',
-
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
+            toast.success('produto excluido')
+            await fetchProducts()
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
             }
-        );
-
-        if (response.ok) {
-            toast.success('protudo deletado com sucesso!')
         }
-        else {
-            toast.error('error ao deletar o item!')
-        }
-
-        fetchProducts()
     }
 
 
@@ -225,97 +168,79 @@ export default function ProductsPage() {
     async function handleUpdateProduct(e: React.FormEvent) {
         e.preventDefault();
 
-        const token = localStorage.getItem('access')
+        if (editingId === null) {
+            return;
+        }
 
-        const response = await fetch(
-            `${API_URL}/api/products/${editingId}/`,
+        const data: UpdateProduct = {
+            name,
+            description,
+            price: Number(price),
+            is_available: isAvailable,
+            category_id: Number(categoryId),
+            barcode: Number(barcode)
+        }
 
-            {
-                method: 'PATCH',
-
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-
-                body: JSON.stringify({
-                    name,
-                    description,
-                    price: Number(price),
-                    is_available: isAvailable,
-                    category_id: Number(categoryId),
-                    barcode: barcode
-                }),
-
-            }
-
-        );
-
-        if (response.ok) {
-            toast('produto atualizado com sucesso!')
+        try {
+            await ProductService.updateProduct(editingId, data)
 
             setEditingId(null);
 
-            setName(""),
-                setDescription(""),
-                setPrice('0'),
-                setIsAvailable(true),
-                setCategoryId("")
-            fetchProducts()
-        }
+            resetForm()
 
-        else {
-            toast.error('error ao atualizar o protudo')
+            toast.success("Produto atualizado com sucesso!");
+
+            await fetchProducts()
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
         }
     }
 
     async function handleUpdateIngredient() {
 
-        if (!selectedProduct) {
+        if (!selectedProduct || editingIngredientId === null) {
             return;
         }
+        const data: UpdateIngredient = {
+            ingredient_id: editingIngredientId,
+            quantity: Number(editingQuantity)
 
-        const token = localStorage.getItem('access')
-
-        const response = await fetch(
-            `${API_URL}/api/products/${selectedProduct.id}/update_ingredient/`,
-
-            {
-                method: 'PATCH',
-
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type":
-                        "application/json",
-                },
-
-                body: JSON.stringify({
-                    ingredient_id: editingIngredientId,
-                    quantity: Number(editingQuantity)
-                }),
-            }
-
-        );
-
-        if (response.ok) {
-            toast.success("Ingrediente atualizado!");
+        }
+        try {
+            await ProductService.updateIngredient(selectedProduct.id, data)
 
             const updateProducts = await fetchProducts();
+
+
             const updatedProduct =
                 updateProducts.find(
                     (product: Product) =>
                         product.id ===
                         selectedProduct.id);
 
+            if (!updatedProduct) {
+                toast.error("Produto não encontrado.");
+                return;
+            }
+
             setSelectedProduct(updatedProduct);
 
             setEditingIngredientId(null);
 
             setEditingQuantity("");
-        }
 
-        else {
-            toast.error("Erro ao atualizar ingrediente")
+            toast.success("Ingrediente atualizado com sucesso!");
+
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
         }
     }
 
@@ -323,30 +248,17 @@ export default function ProductsPage() {
 
         e.preventDefault();
 
-        if (!selectedProduct) return;
+        if (!selectedProduct || ingredientId === null) {
+            return;
+        }
 
-        const token = localStorage.getItem('access');
+        const data: UpdateIngredient = {
+            ingredient_id: Number(ingredientId),
+            quantity: Number(ingredientQuantity)
+        }
 
-        const response = await fetch(
-            `${API_URL}/api/products/${selectedProduct.id}/add_ingredient/`,
-
-            {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-
-                body: JSON.stringify({
-                    ingredient_id: Number(ingredientId),
-                    quantity: Number(ingredientQuantity),
-                }),
-
-            }
-        );
-
-        if (response.ok) {
-            toast.success("Ingrediente adicionado!");
+        try {
+            await ProductService.addIngredient(selectedProduct.id, data)
 
             setIngredientId("");
             setIngredientQuantity("");
@@ -357,13 +269,23 @@ export default function ProductsPage() {
                 (product: Product) =>
                     product.id === selectedProduct.id
             );
+            if (!updatedProduct) {
+                toast.error("Produto não encontrado.");
 
+                return;
+            }
             setSelectedProduct(updatedProduct);
+
+            toast.success("Ingrediente adicionado com sucesso!");
+
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
         }
 
-        else {
-            toast.error("Erro ao adicionar ingrediente");
-        }
 
     }
 
@@ -375,24 +297,13 @@ export default function ProductsPage() {
             return;
         }
 
-        const token = localStorage.getItem('access');
-
-        const response = await fetch(
-            `${API_URL}/api/products/${selectedProduct.id}/remove_ingredient/`,
-            {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-
-                body: JSON.stringify({
+        try {
+            await ProductService.deleteIngredient(
+                selectedProduct.id,
+                {
                     ingredient_id: ingredientId,
-                }),
-            }
-        );
-
-        if (response.ok) {
+                }
+            )
 
             toast.success("Ingrediente removido!");
 
@@ -404,20 +315,25 @@ export default function ProductsPage() {
                     (product: Product) =>
                         product.id === selectedProduct.id
                 );
+            if (!updatedProduct) {
+                toast.error("Produto não encontrado.");
+
+                return;
+            }
 
             setSelectedProduct(updatedProduct);
-
-        } else {
-
-            toast.error(
-                "Erro ao remover ingrediente"
-            );
-
         }
+
+        catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
+        }
+
+
     }
-
-
-
 
 
 

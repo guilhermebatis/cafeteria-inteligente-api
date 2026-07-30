@@ -29,6 +29,10 @@ async function request<T>(
         body: data ? JSON.stringify(data) : undefined,
     });
 
+    if (response.status === 204) {
+        return undefined as T;
+    }
+
     let json;
     try {
         json = await response.json();
