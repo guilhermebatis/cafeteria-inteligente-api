@@ -43,7 +43,7 @@ export default function ProductsPage() {
 
     async function fetchIngredients() {
         try {
-            const response = await IngredientsService.getingredients()
+            const response = await IngredientsService.getIngredients()
 
             setIngredients(response);
         } catch (error) {

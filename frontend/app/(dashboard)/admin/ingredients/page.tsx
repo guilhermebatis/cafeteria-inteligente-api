@@ -2,17 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-interface Ingredient {
-    id: number;
-    name: string;
-    stock_quantity: number;
-    minimum_stock: number;
-    unit: string;
-}
+import IngredientsService from '@/services/ingredientsService'
+import { Ingredient, CreateIngredient, UpdateIngredient } from "@/types/ingredients";
 
 export default function IngredientsPage() {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [name, setName] = useState("");
     const [stockQuantity, setStockQuantity] = useState(0);
@@ -20,21 +13,25 @@ export default function IngredientsPage() {
     const [minimum_stock, setMinimumStock] = useState(0);
     const [editingId, setEditingId] = useState<number | null>(null);
 
+    function resetForm() {
+        setName("");
+        setStockQuantity(0);
+        setUnit("");
+        setMinimumStock(0);
+    }
+
     async function fetchIngredients() {
-        const token = localStorage.getItem("access");
+        try {
+            const response = await IngredientsService.getIngredients()
 
-        const response = await fetch(
-            `${API_URL}/api/ingredients/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            setIngredients(response);
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
             }
-        );
-
-        const data = await response.json();
-
-        setIngredients(data);
+        }
     }
 
     useEffect(() => {
@@ -46,69 +43,47 @@ export default function IngredientsPage() {
     async function handleAddIngredient(e: React.FormEvent) {
         e.preventDefault();
 
-        const token = localStorage.getItem("access");
+        const data: CreateIngredient = {
+            name,
+            unit,
+            stock_quantity: Number(stockQuantity),
+            minimum_stock: Number(minimum_stock),
 
-        const response = await fetch(
-            `${API_URL}/api/ingredients/`,
-            {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    name: name,
-                    unit: unit,
-                    stock_quantity: Number(stockQuantity),
-                    minimum_stock: Number(minimum_stock),
-                }),
-
-
-            }
-        );
-
-
-        setName("");
-        setStockQuantity(0);
-        setUnit("");
-        setMinimumStock(0);
-
-        if (response.ok) {
-            toast.success("Ingrediente criado com sucesso!");
-        } else {
-            toast.error("Erro ao criar ingrediente");
         }
+        try {
+            await IngredientsService.addIngredients(data)
 
-        fetchIngredients();
+            resetForm()
+
+            await fetchIngredients();
+
+            toast.success("ingrediente adicionado com sucesso")
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
+
+
+        }
     }
-
-
 
     async function handleDeleteIngredient(
         id: number
     ) {
+        try {
+            await IngredientsService.deleteIngredients(id)
 
-        const token = localStorage.getItem("access");
+            toast.success("ingrediente removido")
 
-        const response = await fetch(
-            `${API_URL}/api/ingredients/${id}/`,
-            {
-                method: "DELETE",
-
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            await fetchIngredients()
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
             }
-        );
-
-        if (response.ok) {
-            toast.success("Ingrediente deletado com sucesso!");
-            fetchIngredients();
-
-        } else {
-
-            toast.error("Erro ao deletar ingrediente");
-
         }
     }
 
@@ -124,54 +99,40 @@ export default function IngredientsPage() {
         setMinimumStock(ingredient.minimum_stock)
     }
 
-    async function handleUpdateIngredient(e: React.FormEvent) {
+    async function handleUpdateIngredient(e: React.FormEvent,) {
 
         e.preventDefault();
 
-        const token = localStorage.getItem('access')
+        if (editingId === null) {
+            return;
+        }
 
-        const responde = await fetch(
-            `${API_URL}/api/ingredients/${editingId}/`,
+        const data: UpdateIngredient = {
+            name,
+            unit,
+            stock_quantity: Number(stockQuantity),
+            minimum_stock: Number(minimum_stock),
+        }
 
-            {
-                method: 'PATCH',
+        try {
+            await IngredientsService.updateIngredient(editingId, data)
 
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-
-                body: JSON.stringify({
-                    name,
-                    unit,
-                    stock_quantity: Number(stockQuantity),
-                    minimum_stock: Number(minimum_stock),
-                }),
-
-            }
-        );
-
-
-        if (responde.ok) {
             toast.success('Ingrediente atualizado!')
 
             setEditingId(null);
 
-            setName("");
-            setStockQuantity(0);
-            setUnit("");
-            setMinimumStock(0);
+            resetForm()
 
-            fetchIngredients();
-        }
-
-        else {
-            toast.error('Erro ao atualizar ingrediente')
+            await fetchIngredients();
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
         }
 
     }
-
-
 
     return (
         <main className="p-10">
