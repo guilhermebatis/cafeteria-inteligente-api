@@ -1,21 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-
-interface Customer {
-    id: number,
-    name: string,
-    cpf: String,
-    phone: string,
-    email: string,
-    is_active: Boolean,
-
-}
+import { Customer, CreateCustomer, UpdateCustomer, ToggleCustomer } from "@/types/customers";
+import CustomerService from '@/services/customersService'
 
 export default function CustomerPage() {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [selectedCustomer, setSelectedCustomer] =
         useState<Customer | null>(null);
@@ -26,120 +17,118 @@ export default function CustomerPage() {
     const [cpf, setCpf] = useState('')
     const router = useRouter();
 
+    function resetForm() {
+        setIsActive(true);
+        setName('')
+        setPhone('')
+        setEmail('')
+        setCpf('')
+    }
+
     async function fetchCustomers() {
+        try {
+            const response = await CustomerService.getCustomers()
+            setCustomers(response)
 
-        const token = localStorage.getItem('access')
-
-        const response = await fetch(
-            `${API_URL}/api/customers/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
             }
-        )
-
-        if (response.ok) {
-            const data = await response.json();
-            setCustomers(data);
-        } else {
-            toast.error('error ao buscar clientes')
         }
+
     }
 
     async function handleCreateCustomer() {
-        const token = localStorage.getItem('access')
 
-        const response = await fetch(
-            `${API_URL}/api/customers/`,
-            {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    name,
-                    cpf,
-                    phone,
-                    email,
-                    is_active: isActive
-                })
-            })
+        const data: CreateCustomer = {
+            name,
+            cpf,
+            phone,
+            email,
+            is_active: isActive
+        }
 
-        if (response.ok) {
-            toast.success('cliente criado com sucesso')
-
-            setIsActive(true);
-            setName('')
-            setPhone('')
-            setEmail('')
-            setCpf('')
-
+        try {
+            await CustomerService.createCustomer(data)
+            resetForm()
+            toast.success('Cliente criado com sucesso')
             await fetchCustomers()
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
         }
     }
+
 
     async function handleUpdateCustomer() {
 
         if (!selectedCustomer) return;
 
-        const token = localStorage.getItem('access')
+        const data: UpdateCustomer = {
+            name,
+            cpf,
+            phone,
+            email,
+            is_active: isActive
+        }
 
-        const response = await fetch(
-            `${API_URL}/api/customers/${selectedCustomer.id}/`,
-            {
-                method: 'PATCH',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    name,
-                    cpf,
-                    phone,
-                    email,
-                })
-            })
-
-        if (response.ok) {
-            toast.success('cliente atualizado com sucesso')
-
-            setSelectedCustomer(null);
-            setIsActive(true);
-            setName('')
-            setPhone('')
-            setEmail('')
-            setCpf('')
-
+        try {
+            await CustomerService.updateCustomer(selectedCustomer.id, data)
+            resetForm()
+            setSelectedCustomer(null)
+            toast.success('Cliente atualizado com sucesso')
             await fetchCustomers()
 
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
         }
     }
 
     async function handleToggleCustomer(customer: Customer) {
 
-        const token = localStorage.getItem('access')
+        const data: ToggleCustomer = {
+            is_active: !customer.is_active
+        }
 
-        const response = await fetch(
-            `${API_URL}/api/customers/${customer.id}/`,
-            {
-                method: 'PATCH',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    is_active: !customer.is_active,
-                })
-            })
-
-        if (response.ok) {
+        try {
+            await CustomerService.toggleCustomer(customer.id, data)
             toast.success(customer.is_active ? 'Cliente desativado' : 'CLiente ativado')
-        } else { toast.error("Erro ao alterar cliente"); }
+            await fetchCustomers()
 
-        await fetchCustomers()
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
+        }
 
+
+    }
+
+    async function handleDeleteCustomer(id: number) {
+
+        try {
+            await CustomerService.deleteCustomer(id)
+            toast.success('Cliente deletado com sucesso')
+            await fetchCustomers()
+
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
+        }
     }
 
     useEffect(() => {
@@ -242,8 +231,10 @@ export default function CustomerPage() {
                                     setSelectedCustomer(customer);
 
                                     setName(customer.name);
+                                    setCpf(customer.cpf);
                                     setPhone(customer.phone);
                                     setEmail(customer.email);
+                                    setIsActive(customer.is_active);
 
                                 }}
                                 className="border px-3 py-1 rounded"
@@ -255,16 +246,13 @@ export default function CustomerPage() {
                                 className="border px-3 py-1 rounded"
                                 type="button"
                                 onClick={() => {
+                                    handleDeleteCustomer(customer.id);
                                     setSelectedCustomer(null);
 
-                                    setName("");
-                                    setPhone("");
-                                    setEmail("");
-
-                                    setIsActive(true);
+                                    resetForm()
                                 }}
                             >
-                                Cancelar
+                                Remover
                             </button>
 
                             <button

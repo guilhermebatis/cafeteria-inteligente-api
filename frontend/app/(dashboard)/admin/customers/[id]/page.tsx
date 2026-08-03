@@ -3,35 +3,28 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import CustomersService from "@/services/customersService";
+import { Order } from "@/types/orders";
 
 export default function CustomerHistoryPage() {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const params = useParams()
-    const [orders, setOrders] = useState<any[]>([]);
+    const [orders, setOrders] = useState<Order[]>([]);
 
     console.log(params.id)
 
     async function fetchOrderCustomer() {
-
-        const token = localStorage.getItem('access')
-
-        const response = await fetch(
-            `${API_URL}/api/customers/${params.id}/orders/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
+        try {
+            const response = await CustomersService.orderCustomer(Number(params.id))
+            setOrders(response)
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
             }
-        )
-
-        if (response.ok) {
-            const data = await response.json();
-            setOrders(data)
-        } else {
-            toast('error ao buscar historico do cliente')
         }
-    }
 
+    }
 
     useEffect(() => {
         fetchOrderCustomer();
@@ -97,7 +90,7 @@ export default function CustomerHistoryPage() {
 
                         <div className="mt-3">
 
-                            {order.items.map((item: any) => (
+                            {order.items.map((item) => (
 
                                 <p key={item.id}>
 
