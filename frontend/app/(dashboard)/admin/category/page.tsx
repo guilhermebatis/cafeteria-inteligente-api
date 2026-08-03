@@ -2,39 +2,40 @@
 
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Category, CreateCategory, UpdateCategory } from "@/types/categories";
+import CategoryServices from "@/services/categoryService";
 
-interface Category {
-    id: number;
-    name: string,
-    slug: string,
-}
-
-
-export default function () {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+export default function CategoriesPage() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [name, setName] = useState("")
     const [slug, setSlug] = useState("")
 
+    function generateSlug(value: string) {
+        return value
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9_-]/g, "");
+    }
+
+    function resetForm() {
+        setEditingId(null);
+        setName("");
+        setSlug("");
+    }
+
     async function fetchCategory() {
-
-        const token = localStorage.getItem('access')
-
-        const response = await fetch(
-            `${API_URL}/api/categories/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-        const data = await response.json();
-
-
-        setCategories(data);
-
-
+        try {
+            const response = await CategoryServices.getCategory()
+            setCategories(response);
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
+        }
     }
 
     useEffect(() => {
@@ -46,60 +47,51 @@ export default function () {
     async function handleAddCategory(e: React.FormEvent) {
         e.preventDefault()
 
-        const token = localStorage.getItem('access')
-
-        const response = await fetch(
-            `${API_URL}/api/categories/`,
-            {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(
-                    {
-                        name: name,
-                        slug: slug
-                    }
-                )
-            }
-        );
-
-        setName("")
-        setSlug("")
-
-        if (response.ok) {
-            toast.success("categoria adicionada com sucesso")
-        } else {
-            toast.error("error ao adicionar a categoria")
+        const data: CreateCategory = {
+            name,
+            slug
         }
 
-        fetchCategory();
-    }
+        try {
+            await CategoryServices.createCategory(data)
 
-    async function handleDeleteCategory(id: Number) {
+            toast.success('categoria criada com sucesso')
 
-        const token = localStorage.getItem('access')
+            await fetchCategory()
 
-        const response = await fetch(
-            `${API_URL}/api/categories/${id}/`,
+            resetForm()
 
-            {
-                method: 'DELETE',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
             }
-        );
-
-        if (response.ok) {
-            toast.success('categoria deletado com sucesso')
-            fetchCategory()
-        } else {
-            toast.error("error ao remover categoria")
 
         }
+
     }
+
+    async function handleDeleteCategory(id: number) {
+
+        if (id === null) {
+            return
+        }
+
+        try {
+            await CategoryServices.deleteCategory(id)
+            toast.success('categoria deletada com sucesso')
+            await fetchCategory()
+
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
+        }
+    }
+
 
     function handleEditCategory(category: Category) {
 
@@ -111,31 +103,26 @@ export default function () {
     async function handleUpdateCategory(e: React.FormEvent) {
         e.preventDefault();
 
-        const token = localStorage.getItem('access')
+        if (editingId === null) {
+            return;
+        }
 
-        const response = await fetch(
-            `${API_URL}/api/categories/${editingId}/`,
-            {
-                method: 'PATCH',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    name,
-                    slug,
-                })
-            }
-        );
+        const data: UpdateCategory = {
+            name,
+            slug
+        }
 
-        if (response.ok) {
+        try {
+            await CategoryServices.updateCategory(editingId, data)
             toast.success('categoria atualizada com sucesso')
-            setEditingId(null)
-            setName('')
-            setSlug('')
-            fetchCategory()
-        } else {
-            toast.error('error ao atualizar a categoria')
+            resetForm()
+            await fetchCategory()
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
         }
     }
 
@@ -171,7 +158,7 @@ export default function () {
                     placeholder="Slug"
                     value={slug}
                     onChange={(e) =>
-                        setSlug(e.target.value)
+                        setSlug(generateSlug(e.target.value))
                     }
                     className="border p-2 rounded"
                 />
