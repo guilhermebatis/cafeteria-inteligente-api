@@ -1,42 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { StockMovement } from "@/types/stocks";
+import stockService from "@/services/stockService";
+import { toast } from "sonner";
 
-interface StockMovement {
-    id: number;
-
-    ingredient: {
-        name: string;
-    };
-
-    quantity: string;
-    movement_type: string;
-    reason: string;
-    created_at: string;
-}
 
 export default function StockHistoryPage() {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
     const [movements, setMovements] =
         useState<StockMovement[]>([]);
 
     async function fetchStockMovements() {
 
-        const token =
-            localStorage.getItem("access");
-
-        const response = await fetch(
-            `${API_URL}/api/stock-movements/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+        try {
+            const response = await stockService.getStockMovements();
+            setMovements(response);
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao carregar as movimentaçoes de estoque.");
             }
-        );
-
-        const data = await response.json();
-        setMovements(data);
+        }
     }
 
     useEffect(() => {

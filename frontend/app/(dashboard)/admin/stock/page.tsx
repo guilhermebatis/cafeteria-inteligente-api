@@ -2,30 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import Link from "next/link";
-
-interface Ingredient {
-    id: number;
-    name: string;
-    stock_quantity: number;
-    minimum_stock: number;
-    unit: string;
-}
-
-interface StockMovement {
-    id: number;
-    ingredient: {
-        name: string;
-    };
-    quantity: string;
-    movement_type: string;
-    reason: string;
-    created_at: string;
-}
-
+import IngredientsService from "@/services/ingredientsService";
+import StockService from "@/services/stockService";
+import { Ingredient } from "@/types/ingredients";
+import { StockMovement, CreateStockMovement } from "@/types/stocks";
 
 export default function StockPage() {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [movements, setMovements] = useState<StockMovement[]>([]);
     const [stockInputs, setStockInputs] = useState<{
@@ -37,20 +19,16 @@ export default function StockPage() {
 
     async function fetchIngredients() {
 
-        const token = localStorage.getItem("access");
-
-        const response = await fetch(
-            `${API_URL}/api/ingredients/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+        try {
+            const response = await IngredientsService.getIngredients();
+            setIngredients(response);
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao carregar os ingredientes.");
             }
-        );
-
-        const data = await response.json();
-
-        setIngredients(data);
+        }
     }
 
     useEffect(() => {
@@ -62,53 +40,27 @@ export default function StockPage() {
 
     async function fetchStockMovements() {
 
-        const token = localStorage.getItem("access");
-
-        const response = await fetch(
-            `${API_URL}/api/stock-movements/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+        try {
+            const response = await StockService.getStockMovements();
+            setMovements(response);
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao carregar as movimentaçoes de estoque.");
             }
-        );
-
-        if (!response.ok) {
-            toast.error("Erro ao carregar o histórico de estoque.");
-            return;
         }
-
-        const data = await response.json();
-
-        setMovements(data);
-
-
-
     }
 
     async function handleAddStock(ingredientId: number) {
 
-        const token = localStorage.getItem("access");
+        const data: CreateStockMovement = {
+            quantity: Number(stockInputs[ingredientId]?.quantity),
+            reason: stockInputs[ingredientId]?.reason,
+        }
 
-        const response = await fetch(
-            `${API_URL}/api/ingredients/${ingredientId}/add_stock/`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-
-                body: JSON.stringify({
-                    quantity: Number(stockInputs[ingredientId]?.quantity),
-                    reason: stockInputs[ingredientId]?.reason,
-                }),
-
-            }
-        );
-
-        if (response.ok) {
-
+        try {
+            await StockService.addStockMovement(ingredientId, data);
             toast.success("Estoque atualizado com sucesso!");
             setStockInputs({
                 ...stockInputs,
@@ -120,9 +72,12 @@ export default function StockPage() {
             });
             fetchIngredients();
             fetchStockMovements();
-        } else {
-
-            toast.error("Erro ao atualizar o estoque.");
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao carregar as movimentaçoes de estoque.");
+            }
         }
     }
 
