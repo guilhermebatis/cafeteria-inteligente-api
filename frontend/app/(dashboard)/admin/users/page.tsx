@@ -2,17 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-interface User {
-    id: number;
-    username: string;
-    email: string;
-    is_staff: boolean;
-    is_active: boolean;
-}
+import { User, CreateUser, UpdateUser, DisableUser } from "@/types/users";
+import UserService from "@/services/userService";
 
 export default function UsersPage() {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const [users, setUser] = useState<User[]>([]);
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
@@ -23,66 +16,49 @@ export default function UsersPage() {
     const [selectedUser, setSelectedUser] =
         useState<User | null>(null);
 
-    async function fetchUsers() {
-        const token = localStorage.getItem('access')
-
-        const response = await fetch(
-            `${API_URL}/api/users/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            }
-        );
-
-        if (!response.ok) {
-            toast.error('error ao buscar usuarios')
-            return;
-        }
-
-        const data = await response.json();
-        setUser(data)
+    function resetForm() {
+        setUsername("");
+        setEmail("");
+        setPassword("");
+        setIsStaff(false);
+        setIsActive(true);
     }
 
-    async function handleCreateUser() {
-        const token = localStorage.getItem('access')
-
-        const response = await fetch(
-            `${API_URL}/api/users/`,
-            {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    username,
-                    email,
-                    password,
-                    is_staff: isStaff,
-                    is_active: isActive,
-                })
+    async function fetchUsers() {
+        try {
+            const response = await UserService.getUsers()
+            setUser(response)
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao carregar os usuarios.");
             }
-        )
-        if (response.ok) {
+        }
+    }
 
+
+    async function handleCreateUser() {
+
+        const data: CreateUser = {
+            username,
+            email,
+            password,
+            is_staff: isStaff,
+            is_active: isActive,
+        }
+
+        try {
+            await UserService.createUser(data)
+            resetForm()
             toast.success('Usuário criado com sucesso')
-
-            setUsername("");
-            setEmail("");
-            setPassword("");
-
-            setIsStaff(false);
-            setIsActive(true);
-
             await fetchUsers();
-        } else {
-            const data = await response.json();
-
-            console.log(data);
-
-            toast.error('error ao criar login')
-            return;
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao criar os usuario.");
+            }
         }
     }
 
@@ -90,73 +66,50 @@ export default function UsersPage() {
 
         if (!selectedUser) return;
 
-        const token = localStorage.getItem('access')
-
-        const response = await fetch(
-            `${API_URL}/api/users/${selectedUser.id}/`,
-            {
-                method: "PATCH",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    username,
-                    email,
-                    is_staff: isStaff,
-                    is_active: isActive,
-                })
-            })
-
-        if (response.ok) {
-            toast.success("Usuário atualizado")
-
-            setSelectedUser(null);
-
-            setUsername("");
-            setEmail("");
-            setPassword("");
-
-            setIsStaff(false);
-            setIsActive(true);
-
+        const data: UpdateUser = {
+            username,
+            email,
+            password,
+            is_staff: isStaff,
+            is_active: isActive,
+        }
+        try {
+            await UserService.updateUser(selectedUser.id, data)
+            resetForm()
             await fetchUsers();
-
-        } else {
-
-            const data = await response.json();
-
-            console.log(data);
-
-            toast.error("Erro ao atualizar usuário");
-
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao atualizar usuário");
+            }
         }
     }
 
     async function handleDisableUser(user: User) {
 
-        const token = localStorage.getItem('access')
+        const data: DisableUser = {
+            is_active: !user.is_active,
+        }
 
-        const response = await fetch(
-            `${API_URL}/api/users/${user.id}/`,
-            {
-                method: 'PATCH',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    is_active: !user.is_active,
-                })
-            })
+        try {
+            await UserService.disableUser(user.id, data)
 
-        if (response.ok) {
-            toast.success("Usuário desativado")
+            if (data.is_active) {
+                toast.success("Usuário ativado")
+            } else {
+                toast.success("Usuário desativado")
+            }
 
             setSelectedUser(null);
             await fetchUsers();
-        } else {
-            toast.error('error ao desativar o Usuário')
+
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("error ao desativar o Usuário");
+            }
         }
     }
 
