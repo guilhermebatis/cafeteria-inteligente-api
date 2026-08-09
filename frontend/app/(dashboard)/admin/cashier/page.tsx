@@ -5,7 +5,7 @@ import { toast, Toaster } from "sonner";
 import { useRouter } from "next/navigation";
 import { Product } from "@/types/products";
 import { Customer } from "@/types/customers";
-import { OrderItem, Order, AddItemToOrder, IcraseItemQuantity, DecreaseItemQuantity, Payment } from "@/types/orders";
+import { OrderItem, Order, AddItemToOrder, IncreaseItemQuantity, DecreaseItemQuantity, Payment } from "@/types/orders";
 import OrderService from "@/services/odersService";
 import CustomersService from "@/services/customersService";
 import ProductService from "@/services/productService";
@@ -165,7 +165,7 @@ export default function CashierPage() {
 
         if (!item) return;
 
-        const data: IcraseItemQuantity = {
+        const data: IncreaseItemQuantity = {
             product_id: productId,
             quantity: item.quantity + 1
         }

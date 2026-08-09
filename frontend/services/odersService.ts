@@ -2,7 +2,7 @@ import { post, get, update, remove } from './api';
 import {
     Order,
     AddItemToOrder,
-    IcraseItemQuantity,
+    IncreaseItemQuantity,
     DecreaseItemQuantity,
     Payment,
 } from '@/types/orders';
@@ -23,7 +23,7 @@ const orderService = {
     removeProductFromOrder(orderId: number, productId: number) {
         return remove<Order>(`/api/orders/${orderId}/remove_item/`, { product_id: productId });
     },
-    increaseProductQuantity(orderId: number, data: IcraseItemQuantity) {
+    increaseProductQuantity(orderId: number, data: IncreaseItemQuantity) {
         return update<Order>(`/api/orders/${orderId}/update_item/`, data);
     },
     decreaseProductQuantity(orderId: number, data: DecreaseItemQuantity) {
@@ -40,6 +40,9 @@ const orderService = {
     },
     setCustomerToOrder(orderId: number, customerId: number) {
         return update<Order>(`/api/orders/${orderId}/set_customer/`, { customer: customerId });
+    },
+    Checkout(orderId: number, data: {}) {
+        return post<Order>(`/api/orders/${orderId}/checkout/`, data);
     },
 };
 

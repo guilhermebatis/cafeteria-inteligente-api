@@ -1,4 +1,4 @@
-import { Order } from "@/types";
+import { Order } from "@/types/orders";
 
 
 interface CartProps {
@@ -71,7 +71,7 @@ export default function Cart({
                             </div>
 
                             <p>
-                                Preço: R$ {item.price}
+                                Preço: R$ {item.product.price}
                             </p>
 
                             <button

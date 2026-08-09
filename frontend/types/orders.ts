@@ -29,7 +29,7 @@ export interface AddItemToOrder {
     quantity: number;
 }
 
-export interface IcraseItemQuantity {
+export interface IncreaseItemQuantity {
     product_id: number;
     quantity: number;
 }

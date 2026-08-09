@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Cart from "@/components/Cart";
-import { Order } from "@/types";
+import { Order, IncreaseItemQuantity } from "@/types/orders";
 import { toast } from "sonner";
-
+import OderService from "@/services/odersService";
 export default function CartPage() {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
     const [order, setOrder] = useState<Order | null>(null);
 
@@ -14,24 +13,23 @@ export default function CartPage() {
 
     async function fetchOrder() {
 
-        const token = localStorage.getItem("access");
-
         const orderId = localStorage.getItem("order_id");
 
         if (!orderId) return;
 
-        const response = await fetch(
-            `${API_URL}/api/orders/${orderId}/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+        try {
+            const response = await OderService.getOrderId(Number(orderId));
+            setOrder(response);
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao buscar a order.");
             }
-        );
+            return
+        }
 
-        const data = await response.json();
 
-        setOrder(data);
     }
 
     useEffect(() => {
@@ -44,75 +42,82 @@ export default function CartPage() {
         productId: number,
         quantity: number
     ) {
-
-        const token = localStorage.getItem("access");
-
         const orderId = localStorage.getItem("order_id");
 
-        await fetch(
-            `${API_URL}/api/orders/${orderId}/update_item/`,
-            {
-                method: "PATCH",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
+        if (!orderId || !order) {
+            toast.error("Pedido não encontrado.");
+            return;
+        }
+
+        try {
+            if (quantity === 0) {
+                await OderService.removeProductFromOrder(
+                    Number(orderId),
+                    productId
+                );
+            } else {
+                const data: IncreaseItemQuantity = {
                     product_id: productId,
-                    quantity: quantity,
-                }),
+                    quantity,
+                };
+
+                await OderService.increaseProductQuantity(
+                    Number(orderId),
+                    data
+                );
             }
-        );
 
-        await fetchOrder();
+            await fetchOrder();
+            toast.success("Carrinho atualizado!");
 
-        toast.success("Quantidade atualizada!");
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao atualizar o carrinho.");
+            }
+        }
     }
 
     async function handleRemoveItem(productId: number) {
-
-        const token = localStorage.getItem("access");
-
         const orderId = localStorage.getItem("order_id");
 
-        await fetch(
-            `${API_URL}/api/orders/${orderId}/remove_item/`,
-            {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    product_id: productId,
-                }),
+        if (!orderId) {
+            toast.error("Pedido não encontrado.");
+            return;
+        }
+
+        try {
+            await OderService.removeProductFromOrder(
+                Number(orderId),
+                productId
+            );
+
+            await fetchOrder();
+
+            toast.success("Item removido!");
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao remover produto.");
             }
-        );
-
-        await fetchOrder();
-
-        toast.success("Item removido!");
+        }
     }
 
     async function handleCheckout() {
 
-        try {
+        const orderId = localStorage.getItem("order_id");
 
+        if (!orderId) {
+            toast.error("Pedido não encontrado.");
+            return;
+        }
+
+        try {
             setIsLoading(true);
 
-            const token = localStorage.getItem("access");
-
-            const orderId = localStorage.getItem("order_id");
-
-            await fetch(
-                `${API_URL}/api/orders/${orderId}/checkout/`,
-                {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            await OderService.Checkout(Number(orderId), {})
 
             localStorage.removeItem("order_id");
 
