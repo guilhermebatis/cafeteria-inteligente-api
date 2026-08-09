@@ -4,6 +4,8 @@ export interface OrderItem {
     product: {
         id: number;
         name: string;
+        barcode: string;
+        price: number;
     };
 }
 
@@ -20,4 +22,23 @@ export interface Order {
         is_active: boolean;
     };
     items: OrderItem[];
+}
+
+export interface AddItemToOrder {
+    product_id: number;
+    quantity: number;
+}
+
+export interface IcraseItemQuantity {
+    product_id: number;
+    quantity: number;
+}
+
+export interface DecreaseItemQuantity {
+    product_id: number;
+    quantity: number;
+}
+
+export interface Payment {
+    method: string;
 }

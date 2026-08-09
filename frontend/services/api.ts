@@ -57,7 +57,7 @@ async function update<T>(caminho: string, data: unknown, requiresAuth = true) {
     return request<T>('PATCH', caminho, data, requiresAuth);
 }
 
-async function remove<T>(caminho: string, requiresAuth = true) {
-    return request<T>('DELETE', caminho, undefined, requiresAuth);
+async function remove<T>(caminho: string, data?: unknown, requiresAuth = true) {
+    return request<T>('DELETE', caminho, data, requiresAuth);
 }
 export { get, post, update, remove };

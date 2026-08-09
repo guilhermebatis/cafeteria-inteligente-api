@@ -265,7 +265,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         if not customer_id:
             return Response(
                 {'error': 'Customer is required'},
-                status=404)
+                status=status.HTTP_400_BAD_REQUEST)
         customer = Customer.objects.filter(id=customer_id).first()
         if not customer:
             return Response(

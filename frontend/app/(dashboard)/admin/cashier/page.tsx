@@ -3,44 +3,14 @@
 import { useEffect, useState, useRef } from "react";
 import { toast, Toaster } from "sonner";
 import { useRouter } from "next/navigation";
-
-interface Product {
-    id: number;
-    name: string;
-    price: string;
-    barcode: string;
-}
-
-interface Order {
-    id: number;
-    customer?: Customer | null
-    user: number;
-    total_price: string;
-    is_completed: boolean;
-    items: OrderItem[];
-
-}
-
-interface OrderItem {
-    id: number;
-    product: Product;
-    quantity: number;
-    price: string;
-
-}
-
-interface Customer {
-    id: number,
-    name: string,
-    cpf: string,
-    phone: string,
-    email: string,
-    is_active: Boolean,
-
-}
+import { Product } from "@/types/products";
+import { Customer } from "@/types/customers";
+import { OrderItem, Order, AddItemToOrder, IcraseItemQuantity, DecreaseItemQuantity, Payment } from "@/types/orders";
+import OrderService from "@/services/odersService";
+import CustomersService from "@/services/customersService";
+import ProductService from "@/services/productService";
 
 export default function CashierPage() {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     const [loading, setLoading] = useState(true);
     const [barcode, setBarcode] = useState("");
     const [orderId, setOrderId] = useState<number | null>(null);
@@ -66,176 +36,121 @@ export default function CashierPage() {
 
         if (!currentOrderId) return;
 
-        const token = localStorage.getItem("access");
-
-        const response = await fetch(
-            `${API_URL}/api/orders/${currentOrderId}/`,
-            {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+        try {
+            const response = await OrderService.getOrderId(currentOrderId)
+            setOrder({ ...response });
+            setLoading(false);
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao buscar as orders.");
             }
-        )
+            return
 
-        if (!response.ok) {
-            toast.error("Erro ao buscar pedido");
-            return;
         }
-
-        const data = await response.json();
-
-        setOrder({ ...data });
-        setLoading(false);
-
     }
 
     async function fetchCustomer() {
 
-        const token = localStorage.getItem('access')
-
-        const response = await fetch(
-            `${API_URL}/api/customers/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
+        try {
+            const response = await CustomersService.getCustomers()
+            setCustomers(response)
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao buscar clientes.");
             }
-        )
-        const data = await response.json()
-        setCustomers(data)
+            return
+
+        }
     }
 
 
     async function createOrder() {
-        const token = localStorage.getItem("access");
-
-        const response = await fetch(
-            `${API_URL}/api/orders/`,
-
-            {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                }
+        try {
+            const response = await OrderService.createOrder()
+            setOrderId(response.id);
+            await fetchOrder(response.id);
+            return response.id;
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao criar uma nova order.");
             }
-        )
+            return
 
-        if (!response.ok) {
-            toast.error("Erro ao criar pedido");
-            return;
         }
-
-        const data = await response.json();
-        setOrderId(data.id);
-        await fetchOrder(data.id);
-        return data.id;
-
     }
 
     async function getCurrentOrder() {
-        const token = localStorage.getItem("access");
+        try {
+            const response = await OrderService.getCurrentOrder()
+            setOrder(response);
+            setOrderId(response.id);
+            await fetchOrder(response.id);
 
-        const response = await fetch(
-            `${API_URL}/api/orders/current/`,
-            {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            if (!response) {
+                await createOrder();
             }
-        )
 
-        if (response.status === 404) {
-            await createOrder();
-            return;
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao criar uma nova order.");
+            }
+            return
+
         }
 
-        const data = await response.json();
-        setOrder(data);
-        setOrderId(data.id);
-        await fetchOrder(data.id);
 
     }
 
     async function handleSearchProduct() {
-        const token = localStorage.getItem("access");
 
-        const response = await fetch(
-            `${API_URL}/api/products/by_barcode/?barcode=${barcode}`,
+        try {
+            const Productresponse = await ProductService.searchProducts(barcode);
 
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            const data: AddItemToOrder = {
+                product_id: Productresponse.id,
+                quantity: 1
             }
-        )
 
-        if (!response.ok) {
-            toast.error("Produto não encontrado");
-            return;
+            await OrderService.addProductToOrder(orderId!, data)
+            await fetchOrder(orderId!);
+            toast.success("Produto adicionado");
+
+            setBarcode("");
+            inputRef.current?.focus();
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
+            }
+            return
         }
 
-        const data = await response.json();
-
-        const orderResponse = await fetch(
-            `${API_URL}/api/orders/${orderId}/add_item/`,
-            {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-
-                body: JSON.stringify({
-                    product_id: data.id,
-                    quantity: 1
-                })
-            }
-        )
-
-        if (!orderResponse.ok) {
-            toast.error("Erro ao adicionar item ao pedido");
-            return;
-        }
-
-
-        await fetchOrder(orderId!);
-
-        toast.success("Produto adicionado");
-
-        setBarcode("");
-        inputRef.current?.focus();
     }
-
 
 
     async function handleRemoveItem(productId: number) {
         if (!orderId) return;
 
-        const token = localStorage.getItem("access");
-
-        const response = await fetch(
-            `${API_URL}/api/orders/${orderId}/remove_item/`,
-
-            {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    product_id: productId
-                })
+        try {
+            await OrderService.removeProductFromOrder(orderId, productId);
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro inesperado.");
             }
-        )
+            return
 
-        if (!response.ok) {
-            toast.error("Erro ao remover item");
-            return;
         }
-
         await fetchOrder();
     }
 
@@ -250,29 +165,22 @@ export default function CashierPage() {
 
         if (!item) return;
 
-        const token = localStorage.getItem("access");
-
-        const response = await fetch(
-            `${API_URL}/api/orders/${orderId}/update_item/`,
-
-            {
-                method: "PATCH",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    product_id: productId,
-                    quantity: item.quantity + 1
-                })
-            }
-        )
-
-        if (!response.ok) {
-            toast.error("Erro ao atualizar item");
-            return;
+        const data: IcraseItemQuantity = {
+            product_id: productId,
+            quantity: item.quantity + 1
         }
 
+        try {
+            await OrderService.increaseProductQuantity(orderId, data);
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao atualizar item.");
+            }
+            return
+
+        }
         await fetchOrder();
 
     }
@@ -291,27 +199,21 @@ export default function CashierPage() {
             return handleRemoveItem(productId);
         }
 
-        const token = localStorage.getItem("access");
+        const data: DecreaseItemQuantity = {
+            product_id: productId,
+            quantity: item.quantity - 1
+        }
 
-        const response = await fetch(
-            `${API_URL}/api/orders/${orderId}/update_item/`,
-
-            {
-                method: "PATCH",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    product_id: productId,
-                    quantity: item.quantity - 1
-                })
+        try {
+            await OrderService.decreaseProductQuantity(orderId, data);
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao atualizar item.");
             }
-        )
+            return
 
-        if (!response.ok) {
-            toast.error("Erro ao atualizar item");
-            return;
         }
 
         await fetchOrder();
@@ -320,34 +222,22 @@ export default function CashierPage() {
     async function handleFinalizeOrder() {
         if (!orderId) return;
 
-        const token = localStorage.getItem("access");
+        try {
+            await OrderService.finalizeOrder(orderId);
+            toast.success("Pedido finalizado!");
 
-        const response = await fetch(
-            `${API_URL}/api/orders/${orderId}/finalize/`,
-            {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                }
+            setOrder(null);
+
+            await createOrder();
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao finalizar pedido.");
             }
-        )
+            return
 
-        if (!response.ok) {
-
-            const data = await response.json();
-
-            console.log(data);
-
-            toast.error(data.error || "Erro ao finalizar pedido");
-            return;
         }
-
-        toast.success("Pedido finalizado!");
-
-        setOrder(null);
-
-        await createOrder();
 
     }
 
@@ -357,86 +247,60 @@ export default function CashierPage() {
             return
         }
 
-        const token = localStorage.getItem('access')
+        const data: Payment = {
+            method: method
+        }
 
-        const response = await fetch(
-            `${API_URL}/api/orders/${orderId}/pay/`,
-
-            {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-
-                body: JSON.stringify({
-                    method
-                }),
+        try {
+            await OrderService.payment(orderId, data);
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro no pagamento.");
             }
-        );
-
-        if (!response.ok) {
-            const data = await response.json();
-            toast.error(data.error || "Erro no pagamento")
             return
         }
 
-        const approveResponse = await fetch(
-            `${API_URL}/api/orders/${orderId}/approve_payment/`,
-            {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-            });
+        try {
+            await OrderService.approvePayment(orderId);
+            toast.success("pagamento aprovado")
 
-        if (!approveResponse.ok) {
-            toast.error("Erro ao aprovar pagamento")
+            await handleFinalizeOrder();
+
+            router.push(`/receipt/${orderId}`);
+
+            setShowPaymentModal(false);
+
+            await fetchOrder();
+            await createOrder();
+
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao aprovar pagamento.");
+            }
             return
         }
-
-        toast.success("pagamento aprovado")
-
-        await handleFinalizeOrder();
-
-        router.push(`/receipt/${orderId}`);
-
-        setShowPaymentModal(false);
-
-        await fetchOrder();
-
-        await createOrder();
-
     }
 
     async function handleSelectCustomer(customerId: number) {
 
         if (!orderId) return
 
-        const token = localStorage.getItem('access')
+        try {
+            await OrderService.setCustomerToOrder(orderId, customerId);
+            toast.success('Cliente vinculado')
 
-        const response = await fetch(
-            `${API_URL}/api/orders/${orderId}/set_customer/`,
-            {
-                method: 'PATCH',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    customer: customerId,
-                })
-            })
-
-        if (!response.ok) {
-            toast.error("Error ao vincular Cliente")
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao aprovar pagamento.");
+            }
             return
         }
-
-        toast.success('Cliente vinculado')
-        const data = await response.json();
-        console.log(data);
         await fetchOrder()
     }
 

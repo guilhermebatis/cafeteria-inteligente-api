@@ -29,6 +29,9 @@ const ProductService = {
     deleteIngredient(id: number, data: { ingredient_id: number }) {
         return post<Product>(`/api/products/${id}/remove_ingredient/`, data);
     },
+    searchProducts(barcode: string) {
+        return get<Product>(`/api/products/by_barcode/?barcode=${barcode}`);
+    },
 };
 
 export default ProductService;

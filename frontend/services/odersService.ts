@@ -1,0 +1,46 @@
+import { post, get, update, remove } from './api';
+import {
+    Order,
+    AddItemToOrder,
+    IcraseItemQuantity,
+    DecreaseItemQuantity,
+    Payment,
+} from '@/types/orders';
+
+const orderService = {
+    getOrderId(id: number) {
+        return get<Order>(`/api/orders/${id}/`);
+    },
+    createOrder() {
+        return get<Order>(`/api/orders/`);
+    },
+    getCurrentOrder() {
+        return get<Order>(`/api/orders/current/`);
+    },
+    addProductToOrder(orderId: number, data: AddItemToOrder) {
+        return post<Order>(`/api/orders/${orderId}/add_item/`, data);
+    },
+    removeProductFromOrder(orderId: number, productId: number) {
+        return remove<Order>(`/api/orders/${orderId}/remove_item/`, { product_id: productId });
+    },
+    increaseProductQuantity(orderId: number, data: IcraseItemQuantity) {
+        return update<Order>(`/api/orders/${orderId}/update_item/`, data);
+    },
+    decreaseProductQuantity(orderId: number, data: DecreaseItemQuantity) {
+        return update<Order>(`/api/orders/${orderId}/update_item/`, data);
+    },
+    finalizeOrder(orderId: number) {
+        return post<Order>(`/api/orders/${orderId}/finalize/`, {});
+    },
+    payment(orderId: number, data: Payment) {
+        return post<Order>(`/api/orders/${orderId}/pay/`, data);
+    },
+    approvePayment(orderId: number) {
+        return post<Order>(`/api/orders/${orderId}/approve_payment/`, {});
+    },
+    setCustomerToOrder(orderId: number, customerId: number) {
+        return update<Order>(`/api/orders/${orderId}/set_customer/`, { customer: customerId });
+    },
+};
+
+export default orderService;
