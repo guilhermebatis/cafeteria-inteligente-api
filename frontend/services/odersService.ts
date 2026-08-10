@@ -44,6 +44,9 @@ const orderService = {
     Checkout(orderId: number, data: {}) {
         return post<Order>(`/api/orders/${orderId}/checkout/`, data);
     },
+    setHistory() {
+        return get<Order[]>(`/api/orders/history/`);
+    },
 };
 
 export default orderService;

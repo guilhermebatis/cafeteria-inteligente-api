@@ -1,4 +1,4 @@
-import { Order } from "@/types";
+import { Order } from "@/types/orders";
 
 interface OrderHistoryProps {
     history: Order[];
@@ -8,6 +8,12 @@ export default function OrderHistory({
     history,
 }: OrderHistoryProps) {
 
+    const sortedHistory = [...history].sort(
+        (a, b) =>
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
+    );
+
     return (
         <div className="mt-10">
 
@@ -15,22 +21,34 @@ export default function OrderHistory({
                 Histórico de Pedidos
             </h2>
 
-            {history.map((order) => (
+            {sortedHistory.map((order) => (
 
                 <div
                     key={order.id}
                     className="border p-4 rounded mb-4"
                 >
 
-                    <h3 className="font-bold">
-                        Pedido #{order.id}
-                    </h3>
+                    <div className="flex justify-between items-start">
+
+                        <div>
+                            <h3 className="font-bold">
+                                Pedido #{order.id}
+                            </h3>
+
+                            <p className="text-sm text-gray-500">
+                                {new Date(
+                                    order.created_at
+                                ).toLocaleString("pt-BR")}
+                            </p>
+                        </div>
+
+                    </div>
 
                     {order.items.map((item) => (
 
                         <div
                             key={item.id}
-                            className="mt-2"
+                            className="mt-3"
                         >
 
                             <p>
@@ -42,7 +60,7 @@ export default function OrderHistory({
                             </p>
 
                             <p>
-                                Preço: R$ {item.price}
+                                Preço: R$ {item.product.price}
                             </p>
 
                         </div>

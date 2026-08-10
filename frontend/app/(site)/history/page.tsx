@@ -2,31 +2,26 @@
 
 import { useEffect, useState } from "react";
 import OrderHistory from "@/components/OrderHistory";
-import { Order } from "@/types";
+import { Order } from "@/types/orders";
+import orderService from "@/services/odersService";
+import { toast } from "sonner";
 
 export default function HistoryPage() {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL
 
     const [history, setHistory] = useState<Order[]>([]);
 
     async function fetchHistory() {
 
-        const token = localStorage.getItem("access");
-
-        if (!token) return;
-
-        const response = await fetch(
-            `${API_URL}/api/orders/history/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+        try {
+            const response = await orderService.setHistory()
+            setHistory(response)
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao buscar historico.");
             }
-        );
-
-        const data = await response.json();
-
-        setHistory(data);
+        }
     }
 
     useEffect(() => {
