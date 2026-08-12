@@ -3,38 +3,51 @@
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { Order } from "@/types";
+import { Order } from "@/types/orders";
+import orderService from "@/services/odersService";
 
 export default function ReceiptPage() {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL
     const params = useParams();
     const [order, setOrder] = useState<Order | null>(null);
     const router = useRouter();
 
 
-    console.log(params.id);
-
     async function fetchOrder() {
+        const orderId = Number(params.id);
 
-        const token = localStorage.getItem('access')
-
-        const response = await fetch(
-            `${API_URL}/api/orders/${params.id}/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            })
-
-        if (!response.ok) {
-            toast.error('error ao buscar o pedido');
+        if (!orderId) {
+            toast.error("Pedido inválido.");
             return;
         }
 
-        const data = await response.json();
-        console.log(data);
-        setOrder(data)
-        console.log(order)
+        try {
+            const response = await orderService.getOrderId(Number(orderId))
+            setOrder(response)
+            console.log("created_at:", response.created_at);
+            console.log("PARAMS:", params);
+            console.log("ORDER:", response);
+            console.log("CREATED_AT:", response.created_at);
+            console.log(
+                "DATE PARSED:",
+                new Date(response.created_at)
+            );
+            console.log(
+                "DATE BRASIL:",
+                new Date(response.created_at).toLocaleString("pt-BR", {
+                    timeZone: "America/Sao_Paulo",
+                })
+            );
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao fazer a nota fiscal.");
+            }
+            return
+        }
+
+
+
     }
 
     useEffect(() => {
@@ -42,8 +55,6 @@ export default function ReceiptPage() {
         fetchOrder()
 
     }, []);
-
-
 
     return (
 
@@ -141,7 +152,7 @@ export default function ReceiptPage() {
                                     </span>
 
                                     <span>
-                                        R$ {(item.quantity * Number(item.price)).toFixed(2)}
+                                        R$ {(item.quantity * Number(item.product.price)).toFixed(2)}
                                     </span>
 
                                 </div>
