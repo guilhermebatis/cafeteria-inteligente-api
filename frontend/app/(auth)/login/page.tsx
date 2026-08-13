@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

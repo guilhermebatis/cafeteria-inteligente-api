@@ -1,13 +1,11 @@
 "use client";
 
-import { LoginData } from '../types/auth';
 import AuthService from "../services/authService"
 import { useState, useEffect } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import type { User } from "@/types";
 import { toast } from "sonner";
-import { redirect, useRouter } from "next/navigation";
-import { error } from 'console';
+import { useRouter } from "next/navigation";
 
 interface AuthProviderProps {
     children: React.ReactNode;
@@ -28,7 +26,9 @@ export default function AuthProvider({
         const token = localStorage.getItem("access");
 
         if (!token) {
+            setUser(null);
             setLoading(false);
+            router.push("/login");
             return;
         }
 
@@ -38,6 +38,8 @@ export default function AuthProvider({
         } catch (error) {
             setUser(null)
             toast.error("Failed to fetch user data");
+            router.push("/login");
+
 
         } finally {
             setLoading(false);
@@ -77,6 +79,10 @@ export default function AuthProvider({
     useEffect(() => {
         fetchUser();
     }, []);
+
+    if (loading) {
+        return null;
+    }
 
     return (
         <AuthContext.Provider
