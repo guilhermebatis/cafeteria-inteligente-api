@@ -11,8 +11,8 @@ const orderService = {
     getOrderId(id: number) {
         return get<Order>(`/api/orders/${id}/`);
     },
-    createOrder() {
-        return get<Order>(`/api/orders/`);
+    createCurrentOrder() {
+        return post<Order>(`/api/orders/create_current/`, {});
     },
     getCurrentOrder() {
         return get<Order>(`/api/orders/current/`);

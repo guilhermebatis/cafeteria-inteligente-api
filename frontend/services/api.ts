@@ -10,6 +10,16 @@ function getToken() {
     return token;
 }
 
+class ApiError extends Error {
+    status: number;
+
+    constructor(message: string, status: number) {
+        super(message);
+        this.name = 'ApiError';
+        this.status = status;
+    }
+}
+
 async function request<T>(
     method: HttpMethod,
     caminho: string,
@@ -37,10 +47,13 @@ async function request<T>(
     try {
         json = await response.json();
     } catch {
-        throw new Error(`${method} request failed.`);
+        throw new ApiError(`${method} request failed.`, response.status);
     }
     if (!response.ok) {
-        throw new Error(json.detail ?? json.message ?? json.error ?? `${method} request failed.`);
+        throw new ApiError(
+            json.detail ?? json.message ?? json.error ?? `${method} request failed.`,
+            response.status
+        );
     }
     return json as T;
 }
@@ -60,4 +73,4 @@ async function update<T>(caminho: string, data: unknown, requiresAuth = true) {
 async function remove<T>(caminho: string, data?: unknown, requiresAuth = true) {
     return request<T>('DELETE', caminho, data, requiresAuth);
 }
-export { get, post, update, remove };
+export { get, post, update, remove, ApiError };

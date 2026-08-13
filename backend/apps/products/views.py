@@ -216,11 +216,40 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def current(self, request):
         user = request.user
-        order = Order.objects.filter(user=user, is_completed=False).first()
+        order = Order.objects.filter(user=user, is_completed=False
+                                     ).order_by('-created_at').first()
         if not order:
-            return Response(None, status=404)
+            return Response({'detail': 'No open order found.'},
+                            status=status.HTTP_404_NOT_FOUND
+                            )
+
         serializer = OrderSerializer(order)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def create_current(self, request):
+        order = (
+                Order.objects
+                .filter(
+                    user=request.user,
+                    is_completed=False
+                )
+                .first()
+        )
+
+        if order:
+            serializer = OrderSerializer(order)
+            return Response(serializer.data)
+
+        order = Order.objects.create(
+            user=request.user
+        )
+
+        serializer = OrderSerializer(order)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED
+        )
 
     @action(detail=True, methods=['post'],
             serializer_class=PaymentInputSerializer)

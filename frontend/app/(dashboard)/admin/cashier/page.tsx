@@ -1,19 +1,18 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Product } from "@/types/products";
 import { Customer } from "@/types/customers";
-import { OrderItem, Order, AddItemToOrder, IncreaseItemQuantity, DecreaseItemQuantity, Payment } from "@/types/orders";
+import { Order, AddItemToOrder, IncreaseItemQuantity, DecreaseItemQuantity, Payment } from "@/types/orders";
 import OrderService from "@/services/odersService";
 import CustomersService from "@/services/customersService";
 import ProductService from "@/services/productService";
+import { ApiError } from "@/services/api";
 
 export default function CashierPage() {
     const [loading, setLoading] = useState(true);
     const [barcode, setBarcode] = useState("");
-    const [orderId, setOrderId] = useState<number | null>(null);
     const [order, setOrder] = useState<Order | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const [selectedProductId, setSelectedProductId]
@@ -32,7 +31,7 @@ export default function CashierPage() {
 
     async function fetchOrder(orderIdParam?: number) {
 
-        const currentOrderId = orderIdParam || orderId;
+        const currentOrderId = orderIdParam || order?.id;
 
         if (!currentOrderId) return;
 
@@ -67,47 +66,27 @@ export default function CashierPage() {
         }
     }
 
-
-    async function createOrder() {
+    async function initializeOrder() {
         try {
-            const response = await OrderService.createOrder()
-            setOrderId(response.id);
-            await fetchOrder(response.id);
-            return response.id;
-        } catch (error) {
-            if (error instanceof Error) {
-                toast.error(error.message);
-            } else {
-                toast.error("Erro ao criar uma nova order.");
-            }
-            return
+            try {
+                const order = await OrderService.getCurrentOrder();
+                setOrder(order);
+                return order;
+            } catch (error) {
+                if (error instanceof ApiError && error.status === 404) {
+                    const order = await OrderService.createCurrentOrder();
+                    setOrder(order);
+                    return order;
+                }
 
+                throw error;
+            }
+        } catch (error) {
+            toast.error("Erro ao inicializar pedido.");
+            return null;
         }
     }
 
-    async function getCurrentOrder() {
-        try {
-            const response = await OrderService.getCurrentOrder()
-            setOrder(response);
-            setOrderId(response.id);
-            await fetchOrder(response.id);
-
-            if (!response) {
-                await createOrder();
-            }
-
-        } catch (error) {
-            if (error instanceof Error) {
-                toast.error(error.message);
-            } else {
-                toast.error("Erro ao criar uma nova order.");
-            }
-            return
-
-        }
-
-
-    }
 
     async function handleSearchProduct() {
 
@@ -119,8 +98,8 @@ export default function CashierPage() {
                 quantity: 1
             }
 
-            await OrderService.addProductToOrder(orderId!, data)
-            await fetchOrder(orderId!);
+            await OrderService.addProductToOrder(order?.id!, data)
+            await fetchOrder(order?.id!);
             toast.success("Produto adicionado");
 
             setBarcode("");
@@ -138,10 +117,10 @@ export default function CashierPage() {
 
 
     async function handleRemoveItem(productId: number) {
-        if (!orderId) return;
+        if (!order?.id) return;
 
         try {
-            await OrderService.removeProductFromOrder(orderId, productId);
+            await OrderService.removeProductFromOrder(order?.id, productId);
         } catch (error) {
             if (error instanceof Error) {
                 toast.error(error.message);
@@ -157,7 +136,7 @@ export default function CashierPage() {
 
     async function handleIncreaseQuantity(productId: number) {
 
-        if (!orderId || !order) return;
+        if (!order?.id || !order) return;
 
         const item = order.items.find(
             (item) => item.product.id === productId
@@ -171,7 +150,7 @@ export default function CashierPage() {
         }
 
         try {
-            await OrderService.increaseProductQuantity(orderId, data);
+            await OrderService.increaseProductQuantity(order?.id, data);
         } catch (error) {
             if (error instanceof Error) {
                 toast.error(error.message);
@@ -187,7 +166,7 @@ export default function CashierPage() {
 
 
     async function handleDecreaseQuantity(productId: number) {
-        if (!orderId || !order) return;
+        if (!order?.id || !order) return;
 
         const item = order.items.find(
             (item) => item.product.id === productId
@@ -205,7 +184,7 @@ export default function CashierPage() {
         }
 
         try {
-            await OrderService.decreaseProductQuantity(orderId, data);
+            await OrderService.decreaseProductQuantity(order?.id, data);
         } catch (error) {
             if (error instanceof Error) {
                 toast.error(error.message);
@@ -220,77 +199,68 @@ export default function CashierPage() {
     }
 
     async function handleFinalizeOrder() {
-        if (!orderId) return;
+        if (!order?.id) return false;
 
         try {
-            await OrderService.finalizeOrder(orderId);
+            await OrderService.finalizeOrder(order.id);
             toast.success("Pedido finalizado!");
 
             setOrder(null);
 
-            await createOrder();
+            return true;
         } catch (error) {
             if (error instanceof Error) {
                 toast.error(error.message);
             } else {
                 toast.error("Erro ao finalizar pedido.");
             }
-            return
-
+            return false
         }
 
     }
 
     async function handlePayment(method: string) {
 
-        if (!orderId) {
+        if (!order?.id) {
             return
         }
+
+        const currentOrderId = order.id;
 
         const data: Payment = {
             method: method
         }
 
         try {
-            await OrderService.payment(orderId, data);
-        } catch (error) {
-            if (error instanceof Error) {
-                toast.error(error.message);
-            } else {
-                toast.error("Erro no pagamento.");
-            }
-            return
-        }
+            await OrderService.payment(currentOrderId, data);
 
-        try {
-            await OrderService.approvePayment(orderId);
-            toast.success("pagamento aprovado")
+            await OrderService.approvePayment(currentOrderId);
 
-            await handleFinalizeOrder();
+            const finalized = await handleFinalizeOrder();
 
-            router.push(`/receipt/${orderId}`);
+            if (!finalized) return;
 
             setShowPaymentModal(false);
 
-            await fetchOrder();
-            await createOrder();
+            router.push(`/receipt/${currentOrderId}`);
+
+            await initializeOrder();
 
         } catch (error) {
             if (error instanceof Error) {
                 toast.error(error.message);
             } else {
-                toast.error("Erro ao aprovar pagamento.");
+                toast.error("Erro ao processar pagamento.");
             }
-            return
         }
     }
 
     async function handleSelectCustomer(customerId: number) {
 
-        if (!orderId) return
+        if (!order?.id) return
 
         try {
-            await OrderService.setCustomerToOrder(orderId, customerId);
+            await OrderService.setCustomerToOrder(order?.id, customerId);
             toast.success('Cliente vinculado')
 
         } catch (error) {
@@ -307,18 +277,10 @@ export default function CashierPage() {
 
     useEffect(() => {
 
-        getCurrentOrder();
+        initializeOrder();
         fetchCustomer();
 
     }, []);
-
-    useEffect(() => {
-
-        if (orderId) {
-            fetchOrder();
-        }
-
-    }, [orderId]);
 
     useEffect(() => {
 

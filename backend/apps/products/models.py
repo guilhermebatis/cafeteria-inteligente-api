@@ -65,6 +65,15 @@ class Order(models.Model):
     is_completed = models.BooleanField(default=False)
     paid_at = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user'],
+                condition=models.Q(is_completed=False),
+                name='unique_open_order_per_user'
+                )
+            ]
+
     def __str__(self):
         return f'Order {self.id} - {self.user.username}'
 
