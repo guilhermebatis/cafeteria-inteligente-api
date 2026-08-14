@@ -3,7 +3,7 @@
 import AuthService from "../services/authService"
 import { useState, useEffect } from "react";
 import { AuthContext } from "@/context/AuthContext";
-import type { User } from "@/types";
+import type { User } from "@/types/users";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
