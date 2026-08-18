@@ -155,22 +155,38 @@ def finalize_order(order):
         order.save()
 
 
-def process_payment(order, method):
+def process_payment(order: Order,
+                    method: str,
+                    amount_received: Decimal | None = None):
+
     with transaction.atomic():
-        if order.items.count() == 0:
+
+        if not order.items.exists():
             raise ValueError("Cannot pay an empty order")
+
         if order.payments.filter(status="APPROVED").exists():
             raise ValueError("Order already paid")
-        if order.payments.filter(status="PENDING", method=method).exists():
-            raise ValueError("There is already an active payment attempt")
+
         if method not in Payment.Method.values:
             raise ValueError("Invalid payment method")
 
-        payment = Payment.objects.create(
-            order=order,
-            method=method,
-            amount=order.total_price)
-        return payment
+        if method == Payment.Method.CASH:
+
+            if amount_received is None:
+                raise ValueError(
+                    "Amount received is required for cash payment"
+                )
+
+            return cash_payment(order, amount_received)
+
+        if method in [
+            Payment.Method.CREDIT_CARD,
+            Payment.Method.DEBIT_CARD,
+            Payment.Method.PIX,
+        ]:
+            return card_or_pix_payment(order, method)
+
+        raise ValueError("Invalid payment method")
 
 
 def get_sales_stats():
@@ -182,22 +198,22 @@ def get_sales_stats():
             "total_revenue":
                 orders.aggregate(
                     total=Sum("total_price")
-                )["total"] or 0,
+            )["total"] or 0,
 
             "average_ticket":
                 orders.aggregate(
                     avg=Avg("total_price")
-                )["avg"] or 0})
+            )["avg"] or 0})
 
 
 def get_sales_by_thirty_days():
     thirty_days_ago = timezone.now() - timedelta(days=30)
     orders = (Order.objects.filter(is_completed=True,
-                                    created_at__gte=thirty_days_ago)
-                                    .annotate(date_only=TruncDate('created_at'))
-                                    .values('date_only')
-                                    .annotate(revenue=Sum("total_price"))
-                                    .order_by('date_only'))
+                                   created_at__gte=thirty_days_ago)
+              .annotate(date_only=TruncDate('created_at'))
+              .values('date_only')
+              .annotate(revenue=Sum("total_price"))
+              .order_by('date_only'))
     return (orders)
 
 
@@ -218,7 +234,7 @@ def get_top_products_sales():
             "id": product.id,
             "name": product.name,
             "total_sold": total_sold
-            })
+        })
 
     data = sorted(
         data,
@@ -245,12 +261,12 @@ def get_top_customers():
             'id': customer.id,
             'name': customer.name,
             'total_spent': total_spent,
-            })
+        })
     data = sorted(
         data,
         key=lambda p: p['total_spent'],
         reverse=True,
-        )
+    )
     return data
 
 
@@ -271,8 +287,8 @@ def generate_sales_report():
         Paragraph(
             "Cafeteria Inteligente",
             styles["Title"]
-            )
         )
+    )
     elements.append(
         Spacer(1, 20)
     )
@@ -381,3 +397,29 @@ def generate_sales_report():
     buffer.seek(0)
 
     return buffer.getvalue()
+
+
+def cash_payment(order: Order, amount_received: Decimal):
+
+    if order.total_price > amount_received:
+        raise ValueError("insufficient value")
+
+    payment = Payment.objects.create(
+        order=order,
+        method=Payment.Method.CASH,
+        amount_received=amount_received)
+
+    change_money = amount_received - order.total_price
+
+    return payment, change_money
+
+
+def card_or_pix_payment(order: Order, method: str):
+
+    payment = Payment.objects.create(
+        order=order,
+        method=method,
+        amount_received=order.total_price
+    )
+
+    return payment, Decimal("0.00")

@@ -1,6 +1,6 @@
 from rest_framework import viewsets, filters
 from .models import (Product, Category, Order, Ingredient,
-                     ProductIngredient, StockMovement, Customer)
+                     ProductIngredient, StockMovement, Customer, Payment)
 from .serializers import (ProductSerializer, CategorySerializer, OrderSerializer,
                           AddStockSerializer, AddItemSerializer, IngredientSerializer,
                           ProductIngredientSerializer, AddIngredientSerializer, RemoveIngredientSerializer,
@@ -229,12 +229,12 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def create_current(self, request):
         order = (
-                Order.objects
-                .filter(
-                    user=request.user,
-                    is_completed=False
-                )
-                .first()
+            Order.objects
+            .filter(
+                user=request.user,
+                is_completed=False
+            )
+            .first()
         )
 
         if order:
@@ -259,13 +259,20 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         try:
-            payment = process_payment(order,
-                                      serializer.validated_data["method"])
+            payment, change_money = process_payment(
+                order,
+                serializer.validated_data["method"],
+                serializer.validated_data.get(
+                    "amount_received")
+            )
 
         except ValueError as e:
             return Response({'error': str(e)}, status=400)
 
-        return Response(PaymentSerializer(payment).data)
+        return Response({
+            "payment": PaymentSerializer(payment).data,
+            "change_money": change_money
+        })
 
     @action(detail=True, methods=['post'],
             serializer_class=ApprovePaymentSerializer)
@@ -276,11 +283,14 @@ class OrderViewSet(viewsets.ModelViewSet):
         if not payment:
             return Response({"error": "No payment found"}, status=404)
 
-        if payment.status == "APPROVED":
+        if payment.status == Payment.Status.REJECTED:
+            return Response({"error": "Payment rejected"}, status=400)
+
+        if payment.status == Payment.Status.APPROVED:
             return Response({"error": "Payment already approved"}, status=400)
 
         try:
-            payment.status = "APPROVED"
+            payment.status = Payment.Status.APPROVED
             payment.save()
         except ValueError as e:
             return Response({'error': str(e)}, status=400)
@@ -394,13 +404,13 @@ class CustomerViewSet(viewsets.ModelViewSet):
         data = []
         for customer in customers:
             total_spent = (
-                    customer.orders.filter(
-                        is_completed=True
-                    ).aggregate(
-                        total=Sum("total_price")
-                    )['total']
-                    or 0
-                )
+                customer.orders.filter(
+                    is_completed=True
+                ).aggregate(
+                    total=Sum("total_price")
+                )['total']
+                or 0
+            )
             data.append({
                 'id': customer.id,
                 'name': customer.name,

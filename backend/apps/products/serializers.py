@@ -63,9 +63,9 @@ class ProductSerializer(serializers.ModelSerializer):
 
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(),
-        source = 'category',
+        source='category',
         write_only=True
-        )
+    )
 
     ingredients = ProductIngredientSerializer(many=True, read_only=True)
 
@@ -131,6 +131,12 @@ class AddStockSerializer(serializers.Serializer):
 
 class PaymentInputSerializer(serializers.Serializer):
     method = serializers.ChoiceField(choices=Payment.Method.choices)
+
+    amount_received = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False
+    )
 
 
 class PaymentSerializer(serializers.ModelSerializer):
