@@ -5,6 +5,8 @@ import {
     IncreaseItemQuantity,
     DecreaseItemQuantity,
     Payment,
+    PaymentInput,
+    PaymentResponse,
 } from '@/types/orders';
 
 const orderService = {
@@ -32,11 +34,11 @@ const orderService = {
     finalizeOrder(orderId: number) {
         return post<Order>(`/api/orders/${orderId}/finalize/`, {});
     },
-    payment(orderId: number, data: Payment) {
-        return post<Order>(`/api/orders/${orderId}/pay/`, data);
+    payment(orderId: number, data: PaymentInput) {
+        return post<PaymentResponse>(`/api/orders/${orderId}/pay/`, data);
     },
     approvePayment(orderId: number) {
-        return post<Order>(`/api/orders/${orderId}/approve_payment/`, {});
+        return post<Payment>(`/api/orders/${orderId}/approve_payment/`, {});
     },
     setCustomerToOrder(orderId: number, customerId: number) {
         return update<Order>(`/api/orders/${orderId}/set_customer/`, { customer: customerId });

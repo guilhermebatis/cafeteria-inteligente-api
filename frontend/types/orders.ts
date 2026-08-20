@@ -39,6 +39,24 @@ export interface DecreaseItemQuantity {
     quantity: number;
 }
 
+export type PaymentMethod = 'CASH' | 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD';
+
+export type PaymentStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 export interface Payment {
-    method: string;
+    id: number;
+    order: number;
+    method: PaymentMethod;
+    status: PaymentStatus;
+    amount_received: number;
+}
+
+export interface PaymentInput {
+    method: PaymentMethod;
+    amount_received?: number;
+}
+
+export interface PaymentResponse {
+    payment: Payment;
+    change_money: number;
 }

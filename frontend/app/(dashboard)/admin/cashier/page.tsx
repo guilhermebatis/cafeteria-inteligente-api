@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Customer } from "@/types/customers";
-import { Order, AddItemToOrder, IncreaseItemQuantity, DecreaseItemQuantity, Payment } from "@/types/orders";
+import { Order, AddItemToOrder, IncreaseItemQuantity, DecreaseItemQuantity, Payment, PaymentInput, PaymentResponse, PaymentMethod } from "@/types/orders";
 import OrderService from "@/services/odersService";
 import CustomersService from "@/services/customersService";
 import ProductService from "@/services/productService";
@@ -22,6 +22,16 @@ export default function CashierPage() {
     const router = useRouter();
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [customerSearch, setCustomerSearch] = useState('')
+    const [amountReceived, setAmountReceived] = useState("");
+    const [showCashModal, setShowCashModal] = useState(false);
+    const [changeMoney, setChangeMoney] = useState<number>(0);
+    const [lastOrderId, setLastOrderId] = useState<number | null>(null);
+    const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+    const [lastPayment, setLastPayment] = useState<{
+        total: number;
+        received: number;
+        change: number;
+    } | null>(null);
 
     const filteredCustomers = customers.filter((customer) =>
         customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
@@ -219,20 +229,37 @@ export default function CashierPage() {
 
     }
 
-    async function handlePayment(method: string) {
-
+    async function handlePayment(
+        method: PaymentMethod,
+        received?: number
+    ) {
         if (!order?.id) {
-            return
+            return;
         }
 
         const currentOrderId = order.id;
+        const currentTotal = Number(order.total_price)
 
-        const data: Payment = {
-            method: method
+        const data: PaymentInput = {
+            method,
+        };
+
+        if (method === "CASH") {
+            if (received === undefined) {
+                toast.error("Informe o valor recebido.");
+                return;
+            }
+
+            data.amount_received = received;
         }
 
         try {
-            await OrderService.payment(currentOrderId, data);
+
+            const response = await OrderService.payment(currentOrderId, data);
+
+            if (method === "CASH") {
+                setChangeMoney(response.change_money);
+            }
 
             await OrderService.approvePayment(currentOrderId);
 
@@ -240,9 +267,20 @@ export default function CashierPage() {
 
             if (!finalized) return;
 
-            setShowPaymentModal(false);
+            if (method == "CASH" && received !== undefined) {
+                setLastPayment({
+                    total: currentTotal,
+                    received: received,
+                    change: Number(response.change_money),
+                })
+            }
 
-            router.push(`/receipt/${currentOrderId}`);
+            setLastOrderId(currentOrderId);
+
+            setShowPaymentModal(false);
+            setShowCashModal(false);
+            setAmountReceived("");
+            setShowPaymentSuccess(true)
 
             await initializeOrder();
 
@@ -427,7 +465,6 @@ export default function CashierPage() {
 
 
     return (
-
         <main className="p-10">
 
             <h1 className="text-4xl font-bold mb-6">
@@ -451,35 +488,40 @@ export default function CashierPage() {
                 <select
                     className="border p-2 rounded w-full"
                     onChange={(e) =>
-                        handleSelectCustomer(
-                            Number(e.target.value)
-                        )
+                        handleSelectCustomer(Number(e.target.value))
                     }
                     defaultValue=""
                 >
-
                     <option value="">
                         Selecione um cliente
                     </option>
 
                     {filteredCustomers.map((customer) => (
-
                         <option
                             key={customer.id}
                             value={customer.id}
                         >
                             {customer.name} - CPF: {customer.cpf} - Tel: {customer.phone}
                         </option>
-
                     ))}
-
                 </select>
 
                 {order?.customer && (
                     <div className="mt-2 border p-2 rounded">
-                        <p><strong>Cliente:</strong> {order.customer.name}</p>
-                        <p><strong>CPF:</strong> {order.customer.cpf}</p>
-                        <p><strong>Telefone:</strong> {order.customer.phone}</p>
+                        <p>
+                            <strong>Cliente:</strong>{" "}
+                            {order.customer.name}
+                        </p>
+
+                        <p>
+                            <strong>CPF:</strong>{" "}
+                            {order.customer.cpf}
+                        </p>
+
+                        <p>
+                            <strong>Telefone:</strong>{" "}
+                            {order.customer.phone}
+                        </p>
                     </div>
                 )}
 
@@ -490,9 +532,7 @@ export default function CashierPage() {
                 type="text"
                 placeholder="Código de barras"
                 value={barcode}
-                onChange={(e) =>
-                    setBarcode(e.target.value)
-                }
+                onChange={(e) => setBarcode(e.target.value)}
                 onKeyDown={(e) => {
                     if (e.key === "Enter") {
                         handleSearchProduct();
@@ -503,7 +543,7 @@ export default function CashierPage() {
 
             <div className="mt-10 flex flex-col gap-4">
 
-                {order?.items.map((item, index) => (
+                {order?.items.map((item) => (
 
                     <div
                         key={item.product.id}
@@ -529,9 +569,7 @@ export default function CashierPage() {
 
                             <button
                                 onClick={() =>
-                                    handleRemoveItem(
-                                        item.product.id
-                                    )
+                                    handleRemoveItem(item.product.id)
                                 }
                                 className="border px-3 py-1 rounded mt-2"
                             >
@@ -567,14 +605,12 @@ export default function CashierPage() {
                         </div>
 
                         <p className="font-bold">
-
                             R$ {
                                 (
-                                    Number(item.product.price)
-                                    * item.quantity
+                                    Number(item.product.price) *
+                                    item.quantity
                                 ).toFixed(2)
                             }
-
                         </p>
 
                     </div>
@@ -586,86 +622,270 @@ export default function CashierPage() {
             <div className="mt-10 border p-6 rounded">
 
                 <h2 className="text-2xl font-bold">
-
-                    Total:
-                    {" "}
-
-                    R$ {Number(order?.total_price || 0).toFixed(2)}
-                    <br />
-                    <br />
-                    <button onClick={() => setShowPaymentModal(true)}>finalizar</button>
-
+                    Total: R${" "}
+                    {Number(order?.total_price || 0).toFixed(2)}
                 </h2>
 
-
+                <button
+                    onClick={() => setShowPaymentModal(true)}
+                    className="border px-6 py-3 rounded mt-4"
+                >
+                    Finalizar
+                </button>
 
             </div>
 
-            {
-                showPaymentModal && (
+            {/* MODAL - FORMA DE PAGAMENTO */}
+            {showPaymentModal && (
+
+                <div className="
+                fixed inset-0
+                bg-black/50
+                flex items-center
+                justify-center
+            ">
 
                     <div className="
-                    fixed inset-0
-                    bg-black/50
-                    flex items-center
-                    justify-center
+                    bg-black
+                    p-10
+                    rounded
+                    flex
+                    flex-col
+                    gap-4
+                    min-w-[350px]
                 ">
 
-                        <div className="
-                        bg-black
-                        p-10
-                        rounded
-                        flex
-                        flex-col
-                        gap-4
-                    ">
+                        <h2 className="text-2xl font-bold">
+                            Forma de pagamento
+                        </h2>
 
-                            <h2 className="text-2xl font-bold">
-                                Forma de pagamento
-                            </h2>
+                        <p>
+                            Total: R${" "}
+                            {Number(
+                                order?.total_price || 0
+                            ).toFixed(2)}
+                        </p>
 
-                            <button
-                                onClick={() =>
-                                    handlePayment("CASH")
-                                }
-                                className="border p-4 rounded"
-                            >
-                                Dinheiro
-                            </button>
+                        {/* DINHEIRO */}
+                        <button
+                            onClick={() => {
+                                setShowPaymentModal(false);
+                                setShowCashModal(true);
+                            }}
+                            className="border p-4 rounded"
+                        >
+                            Dinheiro
+                        </button>
 
-                            <button
-                                onClick={() =>
-                                    handlePayment("PIX")
-                                }
-                                className="border p-4 rounded"
-                            >
-                                PIX
-                            </button>
+                        {/* PIX */}
+                        <button
+                            onClick={() =>
+                                handlePayment("PIX")
+                            }
+                            className="border p-4 rounded"
+                        >
+                            PIX
+                        </button>
 
-                            <button
-                                onClick={() =>
-                                    handlePayment("CREDIT_CARD")
-                                }
-                                className="border p-4 rounded"
-                            >
-                                Crédito
-                            </button>
+                        {/* CRÉDITO */}
+                        <button
+                            onClick={() =>
+                                handlePayment("CREDIT_CARD")
+                            }
+                            className="border p-4 rounded"
+                        >
+                            Crédito
+                        </button>
 
-                            <button
-                                onClick={() =>
-                                    handlePayment("DEBIT_CARD")
-                                }
-                                className="border p-4 rounded"
-                            >
-                                Débito
-                            </button>
+                        {/* DÉBITO */}
+                        <button
+                            onClick={() =>
+                                handlePayment("DEBIT_CARD")
+                            }
+                            className="border p-4 rounded"
+                        >
+                            Débito
+                        </button>
 
-                        </div>
+                        <button
+                            onClick={() =>
+                                setShowPaymentModal(false)
+                            }
+                            className="border p-4 rounded"
+                        >
+                            Cancelar
+                        </button>
 
                     </div>
-                )
-            }
 
+                </div>
+            )}
+
+            {/* MODAL - PAGAMENTO EM DINHEIRO */}
+            {showCashModal && (
+
+                <div className="
+                fixed inset-0
+                bg-black/50
+                flex items-center
+                justify-center
+            ">
+
+                    <div className="
+                    bg-black
+                    p-10
+                    rounded
+                    flex
+                    flex-col
+                    gap-4
+                    min-w-[350px]
+                ">
+
+                        <h2 className="text-2xl font-bold">
+                            Pagamento em dinheiro
+                        </h2>
+
+                        <p>
+                            Total: R${" "}
+                            {Number(
+                                order?.total_price || 0
+                            ).toFixed(2)}
+                        </p>
+
+                        <label className="font-semibold">
+                            Valor recebido
+                        </label>
+
+                        <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="0,00"
+                            value={amountReceived}
+                            onChange={(e) =>
+                                setAmountReceived(e.target.value)
+                            }
+                            className="border p-4 rounded text-white"
+                        />
+
+                        {amountReceived && Number(amountReceived) >= Number(order?.total_price) && (
+                            <div className="border p-4 rounded">
+                                <p className="font-semibold">
+                                    Troco:
+                                </p>
+
+                                <p className="text-2xl font-bold">
+                                    R${" "}
+                                    {(
+                                        Number(amountReceived) -
+                                        Number(order?.total_price || 0)
+                                    ).toFixed(2)}
+                                </p>
+                            </div>
+                        )}
+
+                        <button
+                            onClick={() => {
+                                const value = Number(
+                                    amountReceived
+                                );
+
+                                if (
+                                    !amountReceived ||
+                                    value <= 0
+                                ) {
+                                    toast.error(
+                                        "Informe um valor válido."
+                                    );
+                                    return;
+                                }
+
+                                handlePayment(
+                                    "CASH",
+                                    value
+                                );
+                            }}
+                            className="border p-4 rounded"
+                        >
+                            Confirmar pagamento
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setShowCashModal(false);
+                                setAmountReceived("");
+                            }}
+                            className="border p-4 rounded"
+                        >
+                            Voltar
+                        </button>
+
+                    </div>
+
+                </div>
+            )}
+
+            {showPaymentSuccess && lastPayment && (
+                <div className="
+        fixed inset-0
+        bg-black/50
+        flex items-center
+        justify-center
+    ">
+                    <div className="
+            bg-black
+            p-10
+            rounded
+            flex
+            flex-col
+            gap-4
+            min-w-[350px]
+        ">
+
+                        <h2 className="text-2xl font-bold text-center">
+                            ✓ Pagamento aprovado
+                        </h2>
+
+                        <div className="border p-4 rounded">
+                            <p>
+                                Total:
+                                {" "}
+                                R$ {lastPayment.total.toFixed(2)}
+                            </p>
+
+                            <p>
+                                Recebido:
+                                {" "}
+                                R$ {lastPayment.received.toFixed(2)}
+                            </p>
+
+                            <div className="mt-4">
+                                <p className="font-semibold">
+                                    Troco
+                                </p>
+
+                                <p className="text-3xl font-bold">
+                                    R$ {lastPayment.change.toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={async () => {
+                                setShowPaymentSuccess(false);
+
+                                if (!lastOrderId) return;
+
+                                router.push(`/receipt/${lastOrderId}`);
+                            }}
+                            className="border p-4 rounded"
+                        >
+                            Continuar
+                        </button>
+
+                    </div>
+                </div>
+            )}
 
         </main>
     );

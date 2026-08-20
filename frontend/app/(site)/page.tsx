@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
-import { Product, Order } from "@/types";
+import { Order } from "@/types/orders";
+import { Product } from "@/types/products"
 import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
 
