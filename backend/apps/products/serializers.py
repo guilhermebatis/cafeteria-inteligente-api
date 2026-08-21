@@ -146,4 +146,4 @@ class PaymentSerializer(serializers.ModelSerializer):
 
 
 class ApprovePaymentSerializer(serializers.Serializer):
-    pass
+    payment_id = serializers.IntegerField()

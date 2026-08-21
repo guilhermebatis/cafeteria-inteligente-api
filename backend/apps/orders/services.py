@@ -179,12 +179,14 @@ def process_payment(order: Order,
 
             return cash_payment(order, amount_received)
 
+        if method == Payment.Method.PIX:
+            return pix_payment(order, method)
+
         if method in [
             Payment.Method.CREDIT_CARD,
             Payment.Method.DEBIT_CARD,
-            Payment.Method.PIX,
         ]:
-            return card_or_pix_payment(order, method)
+            return card_payment(order, method)
 
         raise ValueError("Invalid payment method")
 
@@ -414,12 +416,21 @@ def cash_payment(order: Order, amount_received: Decimal):
     return payment, change_money
 
 
-def card_or_pix_payment(order: Order, method: str):
+def pix_payment(order: Order, method: str):
 
     payment = Payment.objects.create(
         order=order,
-        method=method,
-        amount_received=order.total_price
+        method=Payment.Method.PIX,
+        amount_received=order.total_price,
     )
 
+    return payment, Decimal("0.00")
+
+
+def card_payment(order: Order, Method: str):
+    payment = Payment.objects.create(
+        order=order,
+        method=Method,
+        amount_received=order.total_price,
+    )
     return payment, Decimal("0.00")

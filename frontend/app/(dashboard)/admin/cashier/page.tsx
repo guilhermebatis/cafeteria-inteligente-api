@@ -33,6 +33,10 @@ export default function CashierPage() {
         change: number;
     } | null>(null);
 
+    const [showPixModal, setShowPixModal] = useState(false);
+    const [pendingPaymentId, setPendingPaymentId] =
+        useState<number | null>(null);
+
     const filteredCustomers = customers.filter((customer) =>
         customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
         customer.cpf?.includes(customerSearch) ||
@@ -261,7 +265,15 @@ export default function CashierPage() {
                 setChangeMoney(response.change_money);
             }
 
-            await OrderService.approvePayment(currentOrderId);
+            if (method === "PIX") {
+                setShowPaymentModal(false);
+                setShowPixModal(true);
+                setPendingPaymentId(response.payment.id);
+
+                return;
+            }
+
+            await OrderService.approvePayment(currentOrderId, response.payment.id);
 
             const finalized = await handleFinalizeOrder();
 
@@ -289,6 +301,41 @@ export default function CashierPage() {
                 toast.error(error.message);
             } else {
                 toast.error("Erro ao processar pagamento.");
+            }
+        }
+    }
+
+    async function handleApprovePix() {
+        if (!order?.id || !pendingPaymentId) {
+            return;
+        }
+
+        const currentOrderId = order.id;
+
+        try {
+            await OrderService.approvePayment(
+                order.id,
+                pendingPaymentId
+            );
+
+            const finalized = await handleFinalizeOrder();
+
+            if (!finalized) {
+                return;
+            }
+
+            await initializeOrder();
+
+            setShowPixModal(false);
+            setPendingPaymentId(null);
+
+            router.push(`/receipt/${currentOrderId}`);
+
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao processar o Pix.");
             }
         }
     }
@@ -822,6 +869,51 @@ export default function CashierPage() {
 
                     </div>
 
+                </div>
+            )}
+
+            {/* MODAL - PAGAMENTO NO PIX */}
+            {showPixModal && (
+                <div className="
+        fixed inset-0
+        bg-black/50
+        flex items-center
+        justify-center
+    ">
+                    <div className="
+            bg-black
+            p-10
+            rounded
+            flex
+            flex-col
+            gap-4
+            min-w-[350px]
+        ">
+                        <h2 className="text-2xl font-bold text-center">
+                            Pagamento via PIX
+                        </h2>
+
+                        <p className="text-center">
+                            Aguardando confirmação do pagamento...
+                        </p>
+
+                        <button
+                            onClick={handleApprovePix}
+                            className="border p-4 rounded"
+                        >
+                            Simular pagamento aprovado
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setShowPixModal(false);
+                                setPendingPaymentId(null);
+                            }}
+                            className="border p-4 rounded"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
                 </div>
             )}
 

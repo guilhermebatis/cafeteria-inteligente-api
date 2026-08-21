@@ -37,8 +37,8 @@ const orderService = {
     payment(orderId: number, data: PaymentInput) {
         return post<PaymentResponse>(`/api/orders/${orderId}/pay/`, data);
     },
-    approvePayment(orderId: number) {
-        return post<Payment>(`/api/orders/${orderId}/approve_payment/`, {});
+    approvePayment(orderId: number, paymentId: number) {
+        return post<Payment>(`/api/orders/${orderId}/approve_payment/`, { payment_id: paymentId });
     },
     setCustomerToOrder(orderId: number, customerId: number) {
         return update<Order>(`/api/orders/${orderId}/set_customer/`, { customer: customerId });

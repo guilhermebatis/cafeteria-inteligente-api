@@ -278,7 +278,12 @@ class OrderViewSet(viewsets.ModelViewSet):
             serializer_class=ApprovePaymentSerializer)
     def approve_payment(self, request, pk=None):
         order = self.get_object()
-        payment = order.payments.last()
+
+        serializer = ApprovePaymentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        payment_id = request.data.get("payment_id")
+        payment = order.payments.filter(id=payment_id).first()
 
         if not payment:
             return Response({"error": "No payment found"}, status=404)
