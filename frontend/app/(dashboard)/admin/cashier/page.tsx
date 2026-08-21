@@ -36,7 +36,7 @@ export default function CashierPage() {
     const [showPixModal, setShowPixModal] = useState(false);
     const [pendingPaymentId, setPendingPaymentId] =
         useState<number | null>(null);
-
+    const [showCardModal, setShowCardModal] = useState(false)
     const filteredCustomers = customers.filter((customer) =>
         customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
         customer.cpf?.includes(customerSearch) ||
@@ -273,6 +273,13 @@ export default function CashierPage() {
                 return;
             }
 
+            if (method === "CREDIT_CARD" || method === "DEBIT_CARD") {
+                setShowPaymentModal(false);
+                setShowCardModal(true)
+                setPendingPaymentId(response.payment.id);
+                return
+            }
+
             await OrderService.approvePayment(currentOrderId, response.payment.id);
 
             const finalized = await handleFinalizeOrder();
@@ -339,6 +346,42 @@ export default function CashierPage() {
             }
         }
     }
+
+    async function handleApproveCard() {
+
+        if (!order?.id || !pendingPaymentId) {
+            return
+        }
+
+        const currentOrderId = order.id;
+
+        try {
+            await OrderService.approvePayment(
+                order.id,
+                pendingPaymentId
+            );
+
+            const finalized = await handleFinalizeOrder();
+            if (!finalized) {
+                return;
+            }
+
+            await initializeOrder();
+
+            setShowCardModal(false);
+            setPendingPaymentId(null);
+
+            router.push(`/receipt/${currentOrderId}`);
+
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao processar o Cartão.");
+            }
+        }
+    }
+
 
     async function handleSelectCustomer(customerId: number) {
 
@@ -890,7 +933,7 @@ export default function CashierPage() {
             min-w-[350px]
         ">
                         <h2 className="text-2xl font-bold text-center">
-                            Pagamento via PIX
+                            Pagamento via Pix
                         </h2>
 
                         <p className="text-center">
@@ -907,6 +950,51 @@ export default function CashierPage() {
                         <button
                             onClick={() => {
                                 setShowPixModal(false);
+                                setPendingPaymentId(null);
+                            }}
+                            className="border p-4 rounded"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL - PAGAMENTO NO CARTÂO */}
+            {showCardModal && (
+                <div className="
+        fixed inset-0
+        bg-black/50
+        flex items-center
+        justify-center
+    ">
+                    <div className="
+            bg-black
+            p-10
+            rounded
+            flex
+            flex-col
+            gap-4
+            min-w-[350px]
+        ">
+                        <h2 className="text-2xl font-bold text-center">
+                            Pagamento via Cartão
+                        </h2>
+
+                        <p className="text-center">
+                            Aguardando confirmação do pagamento...
+                        </p>
+
+                        <button
+                            onClick={handleApproveCard}
+                            className="border p-4 rounded"
+                        >
+                            Simular pagamento aprovado
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setShowCardModal(false);
                                 setPendingPaymentId(null);
                             }}
                             className="border p-4 rounded"
