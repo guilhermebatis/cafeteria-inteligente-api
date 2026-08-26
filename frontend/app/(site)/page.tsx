@@ -5,77 +5,82 @@ import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { Order } from "@/types/orders";
 import { Product } from "@/types/products"
-import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
+import { ApiError } from "@/services/api";
+import OrderService from "@/services/odersService";
+import { AddItemToOrder } from "@/types/orders";
+import ProductService from "@/services/productService";
 
 export default function Home() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
-  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [order, setOrder] = useState<Order | null>(null);
-  const [history, setHistory] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  async function fetchOrder() {
-    const token = localStorage.getItem("access");
+  async function initializeOrder() {
+    try {
+      try {
+        const order = await OrderService.getCurrentOrder();
+        setOrder(order);
+        return order;
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) {
+          const order = await OrderService.createCurrentOrder();
+          setOrder(order);
+          return order;
+        }
 
-    const orderId = localStorage.getItem("order_id");
-
-    if (!orderId) return;
-
-    const response = await fetch(
-      `${API_URL}/api/orders/${orderId}/`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        throw error;
       }
-    );
-
-    const data = await response.json();
-    console.log(data)
-
-    setOrder(data);
+    } catch (error) {
+      toast.error("Erro ao inicializar pedido.");
+      return null;
+    }
   }
 
+  async function fetchOrder(orderIdParam?: number) {
+
+    const currentOrderId = orderIdParam || order?.id;
+
+    if (!currentOrderId) return;
+
+    try {
+      const response = await OrderService.getOrderId(currentOrderId)
+      setOrder({ ...response });
+      setLoading(false);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Erro ao buscar as orders.");
+      }
+      return
+
+    }
+  }
+
+
   async function handleAddToCart(productId: number) {
-    const token = localStorage.getItem("access");
 
-    let orderId = localStorage.getItem("order_id");
-
-    if (!orderId) {
-      const response = await fetch(
-        `${API_URL}/api/orders/`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      orderId = String(data.id);
-
-      localStorage.setItem("order_id", orderId);
+    if (order == null) {
+      return
     }
 
-    await fetch(
-      `${API_URL}/api/orders/${orderId}/add_item/`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          product_id: productId,
-          quantity: 1,
-        }),
+    let orderId = order?.id
+
+    const data: AddItemToOrder = {
+      product_id: productId,
+      quantity: 1,
+    }
+
+    try {
+      await OrderService.addProductToOrder(orderId, data)
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Erro ao adicionar item.");
       }
-    );
+    }
 
     await fetchOrder();
 
@@ -88,25 +93,21 @@ export default function Home() {
 
 
   async function fetchProducts() {
-    const token = localStorage.getItem("access");
 
-    const response = await fetch(
-      `${API_URL}/api/products/`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      const response = await ProductService.getProducts()
+      setProducts(response);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Erro ao buscar produtos.");
       }
-    );
-
-    const data = await response.json();
-
-    setProducts(data);
+    }
   }
 
-
   useEffect(() => {
-    const token = localStorage.getItem("access");
+    initializeOrder()
     fetchOrder();
     fetchProducts()
   }, []);
