@@ -228,27 +228,19 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def create_current(self, request):
-        order = (
-            Order.objects
-            .filter(
-                user=request.user,
-                is_completed=False
-            )
-            .first()
-        )
-
-        if order:
-            serializer = OrderSerializer(order)
-            return Response(serializer.data)
-
-        order = Order.objects.create(
-            user=request.user
+        order, created = Order.objects.get_or_create(
+            user=request.user,
+            is_completed=False,
+            defaults={
+                "total_price": 0
+            }
         )
 
         serializer = OrderSerializer(order)
+
         return Response(
             serializer.data,
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
         )
 
     @action(detail=True, methods=['post'],

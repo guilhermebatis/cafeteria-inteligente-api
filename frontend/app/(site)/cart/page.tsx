@@ -1,58 +1,122 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
 import Cart from "@/components/Cart";
-import { Order, IncreaseItemQuantity } from "@/types/orders";
+
+import {
+    Order,
+    IncreaseItemQuantity,
+    PaymentInput,
+    PaymentMethod,
+} from "@/types/orders";
+
 import { toast } from "sonner";
-import OderService from "@/services/odersService";
+
+import OrderService from "@/services/odersService";
+import { ApiError } from "@/services/api";
+
 export default function CartPage() {
+    const router = useRouter();
 
     const [order, setOrder] = useState<Order | null>(null);
 
     const [isLoading, setIsLoading] = useState(false);
 
-    async function fetchOrder() {
+    // Modal de escolha do pagamento
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-        const orderId = localStorage.getItem("order_id");
+    // Modal PIX
+    const [showPixModal, setShowPixModal] = useState(false);
 
-        if (!orderId) return;
+    // Modal cartão
+    const [showCardModal, setShowCardModal] = useState(false);
+
+    // Modal de sucesso
+    const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+
+    // Pagamento que está aguardando aprovação
+    const [pendingPaymentId, setPendingPaymentId] =
+        useState<number | null>(null);
+
+    // Pedido que acabou de ser pago
+    const [lastOrderId, setLastOrderId] =
+        useState<number | null>(null);
+
+    async function initializeOrder() {
+        try {
+            try {
+                const order = await OrderService.getCurrentOrder();
+
+                setOrder(order);
+
+                return order;
+            } catch (error) {
+                if (
+                    error instanceof ApiError &&
+                    error.status === 404
+                ) {
+                    const order =
+                        await OrderService.createCurrentOrder();
+
+                    setOrder(order);
+
+                    return order;
+                }
+
+                throw error;
+            }
+        } catch (error) {
+            toast.error("Erro ao inicializar pedido.");
+
+            return null;
+        }
+    }
+
+    async function fetchOrder(orderIdParam?: number) {
+        const currentOrderId =
+            orderIdParam || order?.id;
+
+        if (!currentOrderId) {
+            return;
+        }
 
         try {
-            const response = await OderService.getOrderId(Number(orderId));
-            setOrder(response);
+            const response =
+                await OrderService.getOrderId(currentOrderId);
+
+            setOrder({
+                ...response,
+            });
         } catch (error) {
             if (error instanceof Error) {
                 toast.error(error.message);
             } else {
-                toast.error("Erro ao buscar a order.");
+                toast.error(
+                    "Erro ao buscar o pedido."
+                );
             }
-            return
         }
-
-
     }
 
     useEffect(() => {
-
-        fetchOrder();
-
+        initializeOrder();
     }, []);
 
     async function handleUpdateQuantity(
         productId: number,
         quantity: number
     ) {
-        const orderId = localStorage.getItem("order_id");
-
-        if (!orderId || !order) {
+        if (!order?.id) {
             toast.error("Pedido não encontrado.");
             return;
         }
 
         try {
             if (quantity === 0) {
-                await OderService.removeProductFromOrder(
-                    Number(orderId),
+                await OrderService.removeProductFromOrder(
+                    Number(order.id),
                     productId
                 );
             } else {
@@ -61,35 +125,37 @@ export default function CartPage() {
                     quantity,
                 };
 
-                await OderService.increaseProductQuantity(
-                    Number(orderId),
+                await OrderService.increaseProductQuantity(
+                    Number(order.id),
                     data
                 );
             }
 
             await fetchOrder();
-            toast.success("Carrinho atualizado!");
 
+            toast.success("Carrinho atualizado!");
         } catch (error) {
             if (error instanceof Error) {
                 toast.error(error.message);
             } else {
-                toast.error("Erro ao atualizar o carrinho.");
+                toast.error(
+                    "Erro ao atualizar o carrinho."
+                );
             }
         }
     }
 
-    async function handleRemoveItem(productId: number) {
-        const orderId = localStorage.getItem("order_id");
-
-        if (!orderId) {
+    async function handleRemoveItem(
+        productId: number
+    ) {
+        if (!order?.id) {
             toast.error("Pedido não encontrado.");
             return;
         }
 
         try {
-            await OderService.removeProductFromOrder(
-                Number(orderId),
+            await OrderService.removeProductFromOrder(
+                Number(order.id),
                 productId
             );
 
@@ -100,53 +166,326 @@ export default function CartPage() {
             if (error instanceof Error) {
                 toast.error(error.message);
             } else {
-                toast.error("Erro ao remover produto.");
+                toast.error(
+                    "Erro ao remover produto."
+                );
             }
         }
     }
 
-    async function handleCheckout() {
+    async function handleFinalizeOrder() {
+        if (!order?.id) {
+            return false;
+        }
 
-        const orderId = localStorage.getItem("order_id");
+        try {
+            await OrderService.finalizeOrder(order.id);
 
-        if (!orderId) {
+            toast.success("Pedido finalizado!");
+
+            setOrder(null);
+
+            return true;
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error(
+                    "Erro ao finalizar pedido."
+                );
+            }
+
+            return false;
+        }
+    }
+
+    async function handlePayment(
+        method: PaymentMethod
+    ) {
+        if (!order?.id) {
             toast.error("Pedido não encontrado.");
             return;
         }
 
+        const currentOrderId = order.id;
+
+        const data: PaymentInput = {
+            method,
+        };
+
+        setIsLoading(true);
+
         try {
-            setIsLoading(true);
+            const response =
+                await OrderService.payment(
+                    currentOrderId,
+                    data
+                );
 
-            await OderService.Checkout(Number(orderId), {})
+            const paymentId =
+                response.payment.id;
 
-            localStorage.removeItem("order_id");
+            setPendingPaymentId(paymentId);
 
-            setOrder(null);
+            // PIX
+            if (method === "PIX") {
+                setShowPaymentModal(false);
+                setShowPixModal(true);
 
-            toast.success("Pedido finalizado!");
+                return;
+            }
 
-        } catch {
+            // CARTÃO
+            if (
+                method === "CREDIT_CARD" ||
+                method === "DEBIT_CARD"
+            ) {
+                setShowPaymentModal(false);
+                setShowCardModal(true);
 
-            toast.error("Erro ao finalizar pedido.");
+                return;
+            }
 
+            // Caso futuramente exista outro método
+            await OrderService.approvePayment(
+                currentOrderId,
+                paymentId
+            );
+
+            const finalized =
+                await handleFinalizeOrder();
+
+            if (!finalized) {
+                return;
+            }
+
+            setLastOrderId(currentOrderId);
+
+            setShowPaymentModal(false);
+            setShowPaymentSuccess(true);
+
+            await initializeOrder();
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error(
+                    "Erro ao processar pagamento."
+                );
+            }
         } finally {
-
             setIsLoading(false);
-
         }
+    }
+
+    async function handleApprovePix() {
+        if (
+            !order?.id ||
+            !pendingPaymentId
+        ) {
+            toast.error(
+                "Pagamento não encontrado."
+            );
+
+            return;
+        }
+
+        const currentOrderId = order.id;
+
+        setIsLoading(true);
+
+        try {
+            // Simula aprovação do PIX
+            await OrderService.approvePayment(
+                currentOrderId,
+                pendingPaymentId
+            );
+
+            const finalized =
+                await handleFinalizeOrder();
+
+            if (!finalized) {
+                return;
+            }
+
+            // Guarda o pedido que foi pago
+            setLastOrderId(currentOrderId);
+
+            // Fecha modal PIX
+            setShowPixModal(false);
+
+            // Limpa pagamento pendente
+            setPendingPaymentId(null);
+
+            // Abre modal de sucesso
+            setShowPaymentSuccess(true);
+
+            // Cria/busca novo carrinho
+            await initializeOrder();
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error(
+                    "Erro ao processar o Pix."
+                );
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    async function handleApproveCard() {
+        if (
+            !order?.id ||
+            !pendingPaymentId
+        ) {
+            toast.error(
+                "Pagamento não encontrado."
+            );
+
+            return;
+        }
+
+        const currentOrderId = order.id;
+
+        setIsLoading(true);
+
+        try {
+            // Simula aprovação do cartão
+            await OrderService.approvePayment(
+                currentOrderId,
+                pendingPaymentId
+            );
+
+            const finalized =
+                await handleFinalizeOrder();
+
+            if (!finalized) {
+                return;
+            }
+
+            // Guarda o pedido pago
+            setLastOrderId(currentOrderId);
+
+            // Fecha modal
+            setShowCardModal(false);
+
+            // Limpa pagamento pendente
+            setPendingPaymentId(null);
+
+            // Abre sucesso
+            setShowPaymentSuccess(true);
+
+            // Cria/busca novo carrinho
+            await initializeOrder();
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error(
+                    "Erro ao processar o cartão."
+                );
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    function cancelPayment() {
+        setShowPaymentModal(false);
+        setShowPixModal(false);
+        setShowCardModal(false);
+
+        setPendingPaymentId(null);
+    }
+
+    function handleOpenPaymentModal() {
+        if (!order?.id) {
+            toast.error("Pedido não encontrado.");
+            return;
+        }
+
+        if (!order.items?.length) {
+            toast.error(
+                "Adicione pelo menos um produto ao carrinho."
+            );
+
+            return;
+        }
+
+        setShowPaymentModal(true);
+    }
+
+    function handleCloseSuccess() {
+        setShowPaymentSuccess(false);
     }
 
     return (
         <main className="p-10">
-
             <Cart
                 order={order}
-                onUpdateQuantity={handleUpdateQuantity}
-                onRemoveItem={handleRemoveItem}
-                onCheckout={handleCheckout}
-                isLoading={isLoading}
-            />
 
+                onUpdateQuantity={
+                    handleUpdateQuantity
+                }
+
+                onRemoveItem={
+                    handleRemoveItem
+                }
+
+                handlePayment={
+                    handlePayment
+                }
+
+                handleApprovePix={
+                    handleApprovePix
+                }
+
+                handleApproveCard={
+                    handleApproveCard
+                }
+
+                cancelPayment={
+                    cancelPayment
+                }
+
+                showPaymentModal={
+                    showPaymentModal
+                }
+
+                showPixModal={
+                    showPixModal
+                }
+
+                showCardModal={
+                    showCardModal
+                }
+
+                showPaymentSuccess={
+                    showPaymentSuccess
+                }
+
+                lastOrderId={
+                    lastOrderId
+                }
+
+                openPaymentModal={
+                    handleOpenPaymentModal
+                }
+
+                closePaymentModal={() =>
+                    setShowPaymentModal(false)
+                }
+
+                onPaymentSuccessContinue={
+                    handleCloseSuccess
+                }
+
+                isLoading={
+                    isLoading
+                }
+            />
         </main>
     );
 }

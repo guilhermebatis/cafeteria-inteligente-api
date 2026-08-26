@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { Order } from "@/types/orders";
 import { Product } from "@/types/products"
