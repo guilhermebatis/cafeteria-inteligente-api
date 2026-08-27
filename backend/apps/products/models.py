@@ -34,6 +34,10 @@ class Product(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     barcode = models.CharField(
         max_length=100, unique=True, null=True, blank=True)
+    image = models.ImageField(upload_to="products/",
+                              blank=True,
+                              null=True,
+                              )
 
     class Meta:
         ordering = ['name']
