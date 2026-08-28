@@ -15,11 +15,11 @@ const ProductService = {
         return get<Product[]>(`/api/products/?${params}`);
     },
 
-    createProduct(data: CreateProduct) {
+    createProduct(data: FormData) {
         return post<Product>('/api/products/', data);
     },
 
-    updateProduct(id: number, data: UpdateProduct) {
+    updateProduct(id: number, data: FormData) {
         return update<Product>(`/api/products/${id}/`, data);
     },
 

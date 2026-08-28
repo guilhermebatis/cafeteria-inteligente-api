@@ -31,6 +31,8 @@ export default function ProductsPage() {
     const [editingQuantity, setEditingQuantity] =
         useState("");
     const [barcode, setBarcode] = useState("");
+    const [image, setImage] = useState<File | null>(null);
+
 
     function resetForm() {
         setName('')
@@ -102,16 +104,20 @@ export default function ProductsPage() {
 
         e.preventDefault();
 
-        const data: CreateProduct = {
-            name,
-            description,
-            price: Number(price),
-            is_available: isAvailable,
-            category_id: Number(categoryId),
-            barcode: Number(barcode)
+        const formData = new FormData();
+
+        formData.append("name", name);
+        formData.append("description", description);
+        formData.append("price", price);
+        formData.append("is_available", String(isAvailable));
+        formData.append("category_id", categoryId);
+        formData.append("barcode", barcode);
+        if (image) {
+            formData.append("image", image);
         }
+
         try {
-            await ProductService.createProduct(data)
+            await ProductService.createProduct(formData)
 
             toast.success('new product create')
 
@@ -172,17 +178,19 @@ export default function ProductsPage() {
             return;
         }
 
-        const data: UpdateProduct = {
-            name,
-            description,
-            price: Number(price),
-            is_available: isAvailable,
-            category_id: Number(categoryId),
-            barcode: Number(barcode)
+        const formData = new FormData();
+        formData.append("name", name);
+        formData.append("description", description);
+        formData.append("price", price);
+        formData.append("is_available", String(isAvailable));
+        formData.append("category_id", categoryId);
+        formData.append("barcode", barcode);
+        if (image) {
+            formData.append("image", image);
         }
 
         try {
-            await ProductService.updateProduct(editingId, data)
+            await ProductService.updateProduct(editingId, formData)
 
             setEditingId(null);
 
@@ -416,6 +424,15 @@ export default function ProductsPage() {
                     onChange={(e) =>
                         setBarcode(e.target.value)
                     }
+                    className="border p-2 rounded"
+                />
+
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                        setImage(e.target.files?.[0] || null);
+                    }}
                     className="border p-2 rounded"
                 />
 

@@ -26,9 +26,14 @@ async function request<T>(
     data?: unknown,
     requiresAuth: boolean = true
 ) {
-    const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-    };
+    const isFormData = data instanceof FormData;
+
+    const headers: HeadersInit = {};
+
+    if (!isFormData) {
+        headers['Content-Type'] = 'application/json';
+    }
+
     if (requiresAuth) {
         headers.Authorization = `Bearer ${getToken()}`;
     }
@@ -36,7 +41,7 @@ async function request<T>(
     const response = await fetch(`${API_URL}${caminho}`, {
         method,
         headers,
-        body: data ? JSON.stringify(data) : undefined,
+        body: data ? (isFormData ? data : JSON.stringify(data)) : undefined,
     });
 
     if (response.status === 204) {
