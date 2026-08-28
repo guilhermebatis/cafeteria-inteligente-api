@@ -11,6 +11,7 @@ export interface CreateProduct {
     is_available: boolean;
     category_id: number;
     barcode: number;
+    image?: string;
 }
 
 export interface UpdateProduct {
@@ -20,6 +21,7 @@ export interface UpdateProduct {
     is_available: boolean;
     category_id: number;
     barcode: number;
+    image?: string;
 }
 
 export interface Product {
@@ -31,6 +33,7 @@ export interface Product {
     category: Category;
     ingredients: ProductIngredient[];
     barcode: string;
+    image: string;
 }
 
 export interface Ingredient {

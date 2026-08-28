@@ -2,8 +2,17 @@ import { post, get, update, remove } from './api';
 import { Product, UpdateProduct, CreateProduct, UpdateIngredient } from '../types/products';
 
 const ProductService = {
-    getProducts() {
-        return get<Product[]>('/api/products/');
+    getProducts(search?: string, category?: number) {
+        const params = new URLSearchParams();
+
+        if (search) {
+            params.append('search', search);
+        }
+        if (category) {
+            params.append('category', String(category));
+        }
+
+        return get<Product[]>(`/api/products/?${params}`);
     },
 
     createProduct(data: CreateProduct) {

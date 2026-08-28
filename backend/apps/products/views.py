@@ -1,26 +1,29 @@
 from rest_framework import viewsets, filters
 from .models import (Product, Category, Order, Ingredient,
                      ProductIngredient, StockMovement, Customer, Payment)
-from .serializers import (ProductSerializer, CategorySerializer, OrderSerializer,
-                          AddStockSerializer, AddItemSerializer, IngredientSerializer,
-                          ProductIngredientSerializer, AddIngredientSerializer, RemoveIngredientSerializer,
-                          StockMovementSerializer, PaymentSerializer, PaymentInputSerializer,
-                          ApprovePaymentSerializer, CustomerSerializer, OrderItem)
+from .serializers import (
+    ProductSerializer, CategorySerializer, OrderSerializer,
+    AddStockSerializer, AddItemSerializer, IngredientSerializer,
+    ProductIngredientSerializer, AddIngredientSerializer,
+    RemoveIngredientSerializer, StockMovementSerializer,
+    PaymentSerializer, PaymentInputSerializer,
+    ApprovePaymentSerializer, CustomerSerializer)
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import UserSerializer
 from rest_framework.decorators import action
-from apps.orders.services import (add_item_to_order, remove_item_from_order,
-                                  update_item_quantity, add_ingredient_to_product,
-                                  update_ingredient_to_product, remove_ingredient_to_product,
-                                  finalize_order, process_payment, generate_sales_report,
-                                  get_sales_stats, get_sales_by_thirty_days, get_top_products_sales)
+from apps.orders.services import (
+    add_item_to_order, remove_item_from_order,
+    update_item_quantity, add_ingredient_to_product,
+    update_ingredient_to_product, remove_ingredient_to_product,
+    finalize_order, process_payment, generate_sales_report,
+    get_sales_stats, get_sales_by_thirty_days, get_top_products_sales)
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
 from django.contrib.auth.models import User
-from django.db.models import Sum, Avg
+from django.db.models import Sum
 from django.http import HttpResponse
 
 
@@ -32,11 +35,11 @@ class ProductViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend,
                        filters.SearchFilter,
                        filters.OrderingFilter,
-                       filters.SearchFilter]
+                       ]
 
     filterset_fields = ['category', 'is_available']
 
-    search_fields = ['name', 'description']
+    search_fields = ['name', 'description', 'category__name']
 
     ordering_fields = ['price', 'created_at']
 

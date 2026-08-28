@@ -16,6 +16,8 @@ services:
       - "8000:8000"
     depends_on:
       - db
+    volumes:
+      - ./backend/media:/app/media
     environment:
       DATABASE_URL: postgresql://cafeteria_user:cafeteria_password@db:5432/cafeteria_db
       SECRET_KEY: django-insecure-dev-secret-key
@@ -23,7 +25,7 @@ services:
       ALLOWED_HOSTS: "*"
       CORS_ALLOWED_ORIGINS: http://localhost:3000
     env_file:
-    - .env.example
+      - .env.example
 
   frontend:
     build:
