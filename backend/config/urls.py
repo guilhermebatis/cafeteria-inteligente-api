@@ -21,6 +21,7 @@ urlpatterns = [
 
     # API
     path('api/', include('apps.products.urls')),
+    path('api/', include('apps.coupons.urls')),
     path('api-auth/', include('rest_framework.urls')),
 ]
 

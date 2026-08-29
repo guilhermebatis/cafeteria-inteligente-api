@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 
 
-class Coupons(models.Model):
+class Coupon(models.Model):
 
     code = models.CharField(max_length=50, unique=True)
     max_discount_value = models.DecimalField(
