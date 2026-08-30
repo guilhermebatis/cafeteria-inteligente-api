@@ -14,8 +14,8 @@ class Coupon(models.Model):
     discount_percent = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0.00,
-        validators=[MaxValueValidator(100), MinValueValidator(0)])
+        default=1.00,
+        validators=[MaxValueValidator(100), MinValueValidator(1)])
 
     created_at = models.DateTimeField(auto_now_add=True)
     expired = models.DateTimeField(null=True, blank=True)

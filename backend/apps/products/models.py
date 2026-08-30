@@ -64,6 +64,8 @@ class Order(models.Model):
                                  null=True, blank=True, related_name='orders')
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='orders')
+    coupon = models.ForeignKey(
+        "coupons.Coupon", on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     total_price = models.DecimalField(
         max_digits=10, decimal_places=2, default=0.00)
@@ -82,10 +84,33 @@ class Order(models.Model):
     def __str__(self):
         return f'Order {self.id} - {self.user.username}'
 
+    def calculate_discount(self):
+        if not self.coupon:
+            return 0
+
+        discount_percentual = self.coupon.discount_percent
+        total_price = self.total_price
+        discount = total_price * discount_percentual / 100
+
+        if self.coupon.max_discount_value:
+            if discount > self.coupon.max_discount_value:
+                return self.coupon.max_discount_value
+            else:
+                return discount
+
+        return discount
+
     def update_total_price(self):
+
         total = sum(item.product.price *
                     item.quantity for item in self.items.all())
+
         self.total_price = total
+
+        if self.coupon:
+            discount = self.calculate_discount()
+            self.total_price = total - discount
+
         self.save()
 
 
