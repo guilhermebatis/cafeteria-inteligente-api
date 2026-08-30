@@ -15,3 +15,7 @@ class CouponSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Não é possível criar um cupom com data de expiração anterior à data atual.')
         return value
+
+
+class ApplyCouponSerializer(serializers.Serializer):
+    code = serializers.CharField()

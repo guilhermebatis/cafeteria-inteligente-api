@@ -1,6 +1,8 @@
 from rest_framework import viewsets, filters
 from .models import (Product, Category, Order, Ingredient,
                      ProductIngredient, StockMovement, Customer, Payment)
+from apps.coupons.models import Coupon
+from apps.coupons.serializers import ApplyCouponSerializer
 from .serializers import (
     ProductSerializer, CategorySerializer, OrderSerializer,
     AddStockSerializer, AddItemSerializer, IngredientSerializer,
@@ -25,6 +27,7 @@ from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
 from django.contrib.auth.models import User
 from django.db.models import Sum
 from django.http import HttpResponse
+from django.utils import timezone
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -316,6 +319,55 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response(
             OrderSerializer(order).data
         )
+
+    @action(detail=True,
+            methods=['post'],
+            serializer_class=ApplyCouponSerializer)
+    def apply_coupon(self, request, pk=None):
+        order = self.get_object()
+        code = request.data.get('code')
+
+        if order.is_completed:
+            return Response(
+                {'error': 'Order is completed.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            coupon = Coupon.objects.get(code=code)
+            if not coupon.is_active:
+                return Response(
+                    {'error': 'Coupon is inactive.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if coupon.expired and coupon.expired < timezone.now():
+                return Response(
+                    {'error': 'Coupon has expired.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        except Coupon.DoesNotExist:
+            return Response(
+                {'error': 'not found coupon'},
+                status=status.HTTP_404_NOT_FOUND)
+
+        order.coupon = coupon
+        order.update_total_price()
+        serializer = OrderSerializer(order)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['delete'],)
+    def remove_coupon(self, request, pk=None):
+        order = self.get_object()
+        if order.coupon:
+            order.coupon = None
+            order.update_total_price()
+        else:
+            return Response(
+                {'error': 'not found coupon'},
+                status=status.HTTP_404_NOT_FOUND)
+        serializer = OrderSerializer(order)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def stats(self, resquest):
