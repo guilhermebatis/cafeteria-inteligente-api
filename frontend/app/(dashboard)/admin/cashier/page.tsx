@@ -9,6 +9,7 @@ import OrderService from "@/services/odersService";
 import CustomersService from "@/services/customersService";
 import ProductService from "@/services/productService";
 import { ApiError } from "@/services/api";
+import { Coupon, ApplyCoupon } from '@/types/coupon';
 
 export default function CashierPage() {
     const [loading, setLoading] = useState(true);
@@ -42,6 +43,8 @@ export default function CashierPage() {
         customer.cpf?.includes(customerSearch) ||
         customer.phone?.includes(customerSearch)
     );
+    const [couponCode, setCouponCode] = useState("");
+
 
     async function fetchOrder(orderIdParam?: number) {
 
@@ -402,6 +405,28 @@ export default function CashierPage() {
         await fetchOrder()
     }
 
+    async function apply_coupon_order(code: string) {
+        if (!order?.id) return
+        if (!code) return
+
+        const data: ApplyCoupon = {
+            code
+        }
+
+        try {
+            const updatedOrder = await OrderService.applyCoupon(order.id, data)
+            setOrder(updatedOrder);
+            setCouponCode("")
+            toast.success('Coupon vinculado')
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao aplicar coupon.");
+            }
+            return
+        }
+    }
 
     useEffect(() => {
 
@@ -707,6 +732,37 @@ export default function CashierPage() {
 
                 ))}
 
+            </div>
+
+            <div className="mt-10 border p-6 rounded">
+                <h2 className="text-xl font-bold mb-4">
+                    Cupom de desconto
+                </h2>
+
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        placeholder="Digite o código do cupom"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        className="border p-3 rounded flex-1"
+                    />
+
+                    <button
+                        onClick={() => apply_coupon_order(couponCode)}
+                        className="border px-5 py-3 rounded"
+                    >
+                        Aplicar
+                    </button>
+                </div>
+
+                {order?.coupon && (
+                    <div className="mt-3">
+                        <p className="font-semibold">
+                            Cupom aplicado: {order.coupon.code}
+                        </p>
+                    </div>
+                )}
             </div>
 
             <div className="mt-10 border p-6 rounded">

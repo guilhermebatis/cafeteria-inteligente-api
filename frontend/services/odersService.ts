@@ -9,6 +9,8 @@ import {
     PaymentResponse,
 } from '@/types/orders';
 
+import { ApplyCoupon } from '@/types/coupon';
+
 const orderService = {
     getOrderId(id: number) {
         return get<Order>(`/api/orders/${id}/`);
@@ -48,6 +50,10 @@ const orderService = {
     },
     setHistory() {
         return get<Order[]>(`/api/orders/history/`);
+    },
+
+    applyCoupon(id: number, data: ApplyCoupon) {
+        return post<Order>(`/api/orders/${id}/apply_coupon/`, data);
     },
 };
 

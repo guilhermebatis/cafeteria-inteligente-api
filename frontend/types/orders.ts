@@ -1,3 +1,5 @@
+import { Coupon } from './coupon';
+
 export interface OrderItem {
     id: number;
     quantity: number;
@@ -22,6 +24,7 @@ export interface Order {
         is_active: boolean;
     };
     items: OrderItem[];
+    coupon?: Coupon;
 }
 
 export interface AddItemToOrder {
