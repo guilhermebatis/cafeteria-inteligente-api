@@ -3,6 +3,7 @@ from .models import (Product, Category, OrderItem, Order,
                      Ingredient, ProductIngredient, StockMovement,
                      Payment, Customer)
 from django.contrib.auth.models import User
+from apps.coupons.serializers import CouponSerializer
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -101,6 +102,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     customer = CustomerSerializer(read_only=True)
+    coupon = CouponSerializer(read_only=True)
 
     class Meta:
         model = Order
@@ -110,6 +112,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'customer',
             'created_at',
             'total_price',
+            'coupon',
             'items',
             'is_completed'
         ]

@@ -55,6 +55,9 @@ const orderService = {
     applyCoupon(id: number, data: ApplyCoupon) {
         return post<Order>(`/api/orders/${id}/apply_coupon/`, data);
     },
+    removeCoupon(id: number) {
+        return remove<Order>(`/api/orders/${id}/remove_coupon/`, {});
+    },
 };
 
 export default orderService;

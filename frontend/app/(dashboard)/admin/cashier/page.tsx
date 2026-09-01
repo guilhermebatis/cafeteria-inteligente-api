@@ -416,6 +416,8 @@ export default function CashierPage() {
         try {
             const updatedOrder = await OrderService.applyCoupon(order.id, data)
             setOrder(updatedOrder);
+            console.log("RESPOSTA DO CUPOM:", updatedOrder);
+
             setCouponCode("")
             toast.success('Coupon vinculado')
         } catch (error) {
@@ -428,6 +430,22 @@ export default function CashierPage() {
         }
     }
 
+    async function remove_coupon_order() {
+        if (!order?.id) { return }
+
+        try {
+            const updatedOrder = await OrderService.removeCoupon(order.id);
+            setOrder(updatedOrder);
+            setCouponCode("");
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao remover o coupon da order.");
+            }
+            return
+        }
+    }
     useEffect(() => {
 
         initializeOrder();
@@ -739,28 +757,45 @@ export default function CashierPage() {
                     Cupom de desconto
                 </h2>
 
-                <div className="flex gap-2">
-                    <input
-                        type="text"
-                        placeholder="Digite o código do cupom"
-                        value={couponCode}
-                        onChange={(e) => setCouponCode(e.target.value)}
-                        className="border p-3 rounded flex-1"
-                    />
+                {!order?.coupon ? (
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="Digite o código do cupom"
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value)}
+                            className="border p-3 rounded flex-1"
+                        />
 
-                    <button
-                        onClick={() => apply_coupon_order(couponCode)}
-                        className="border px-5 py-3 rounded"
-                    >
-                        Aplicar
-                    </button>
-                </div>
+                        <button
+                            onClick={() => apply_coupon_order(couponCode)}
+                            className="border px-5 py-3 rounded"
+                        >
+                            Aplicar
+                        </button>
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-between border p-4 rounded">
+                        <div>
+                            <p className="font-semibold">
+                                Cupom aplicado
+                            </p>
 
-                {order?.coupon && (
-                    <div className="mt-3">
-                        <p className="font-semibold">
-                            Cupom aplicado: {order.coupon.code}
-                        </p>
+                            <p className="text-lg font-bold">
+                                {order.coupon.code}
+                            </p>
+
+                            <p className="text-sm text-gray-500">
+                                Desconto: {order.coupon.discount_percent}%
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={() => remove_coupon_order()}
+                            className="border px-4 py-2 rounded"
+                        >
+                            Remover cupom
+                        </button>
                     </div>
                 )}
             </div>
