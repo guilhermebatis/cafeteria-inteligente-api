@@ -86,6 +86,13 @@ export default function AdminSidebar() {
             </Link>
 
             <Link
+                href="/admin/coupons"
+                className="border p-2 rounded"
+            >
+                Coupons
+            </Link>
+
+            <Link
                 href="/admin/stock"
                 className="border p-2 rounded"
             >

@@ -1,5 +1,5 @@
 import { post, get, update, remove } from './api';
-import { Coupon } from '@/types/coupon';
+import { Coupon, CreateCoupon, UpdateCoupon } from '@/types/coupon';
 
 const CouponService = {
     getCouponId(id: number) {
@@ -8,10 +8,10 @@ const CouponService = {
     getCoupon() {
         return get<Coupon[]>(`/api/coupons/`);
     },
-    createCoupon(data: Coupon) {
+    createCoupon(data: CreateCoupon) {
         return post<Coupon>(`/api/coupons/`, data);
     },
-    updateCoupon(id: number, data: Coupon) {
+    updateCoupon(id: number, data: UpdateCoupon) {
         return update<Coupon>(`/api/coupons/${id}/`, data);
     },
     deleteCoupon(id: number) {
