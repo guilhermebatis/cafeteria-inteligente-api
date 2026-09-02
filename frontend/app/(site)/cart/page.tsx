@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
+import { ApplyCoupon } from "@/types/coupon";
 import Cart from "@/components/Cart";
 
 import {
@@ -43,6 +43,8 @@ export default function CartPage() {
     // Pedido que acabou de ser pago
     const [lastOrderId, setLastOrderId] =
         useState<number | null>(null);
+    // coupon 
+    const [couponCode, setCouponCode] = useState<string>("");
 
     async function initializeOrder() {
         try {
@@ -392,6 +394,48 @@ export default function CartPage() {
         }
     }
 
+    async function apply_coupon_order(code: string) {
+        if (!order?.id) return
+        if (!code) return
+
+        const data: ApplyCoupon = {
+            code
+        }
+
+        try {
+            const updatedOrder = await OrderService.applyCoupon(order.id, data)
+            setOrder(updatedOrder);
+            console.log("RESPOSTA DO CUPOM:", updatedOrder);
+
+            setCouponCode("")
+            toast.success('Coupon vinculado')
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao aplicar coupon.");
+            }
+            return
+        }
+    }
+
+    async function remove_coupon_order() {
+        if (!order?.id) { return }
+
+        try {
+            const updatedOrder = await OrderService.removeCoupon(order.id);
+            setOrder(updatedOrder);
+            setCouponCode("");
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Erro ao remover o coupon da order.");
+            }
+            return
+        }
+    }
+
     function cancelPayment() {
         setShowPaymentModal(false);
         setShowPixModal(false);
@@ -484,6 +528,20 @@ export default function CartPage() {
 
                 isLoading={
                     isLoading
+                }
+                // CUPOM
+                couponCode={couponCode}
+
+                setCouponCode={
+                    setCouponCode
+                }
+
+                applyCoupon={
+                    apply_coupon_order
+                }
+
+                removeCoupon={
+                    remove_coupon_order
                 }
             />
         </main>

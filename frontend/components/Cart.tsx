@@ -42,6 +42,12 @@ interface CartProps {
     onPaymentSuccessContinue: () => void;
 
     isLoading: boolean;
+
+    // CUPOM
+    couponCode: string;
+    setCouponCode: (value: string) => void;
+    applyCoupon: (code: string) => void;
+    removeCoupon: () => void;
 }
 
 export default function Cart({
@@ -61,6 +67,12 @@ export default function Cart({
     closePaymentModal,
     onPaymentSuccessContinue,
     isLoading,
+
+    // CUPOM
+    couponCode,
+    setCouponCode,
+    applyCoupon,
+    removeCoupon,
 }: CartProps) {
     return (
         <div className="mt-10">
@@ -129,11 +141,74 @@ export default function Cart({
                         </div>
                     ))}
 
+                    {/* CUPOM */}
+
+                    <div className="border p-4 rounded mt-6">
+
+                        <h3 className="font-bold mb-3">
+                            Cupom de desconto
+                        </h3>
+
+                        {!order.coupon ? (
+                            <div className="flex gap-2">
+
+                                <input
+                                    type="text"
+                                    value={couponCode}
+                                    onChange={(e) =>
+                                        setCouponCode(e.target.value)
+                                    }
+                                    placeholder="Digite seu cupom"
+                                    className="border p-2 rounded flex-1"
+                                />
+
+                                <button
+                                    onClick={() =>
+                                        applyCoupon(couponCode)
+                                    }
+                                    disabled={isLoading || !couponCode.trim()}
+                                    className="border px-4 py-2 rounded"
+                                >
+                                    Aplicar
+                                </button>
+
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-between">
+
+                                <div>
+                                    <p className="font-bold">
+                                        Cupom aplicado
+                                    </p>
+
+                                    <p>
+                                        Código: {order.coupon.code}
+                                    </p>
+
+                                    <p>
+                                        Desconto:{" "}
+                                        {order.coupon.discount_percent}%
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={removeCoupon}
+                                    disabled={isLoading}
+                                    className="border px-4 py-2 rounded"
+                                >
+                                    Remover cupom
+                                </button>
+
+                            </div>
+                        )}
+
+                    </div>
+
+                    {/* TOTAL */}
+
                     <p className="font-bold mt-4">
                         Total: R${" "}
-                        {Number(
-                            order.total_price
-                        ).toFixed(2)}
+                        {Number(order.total_price).toFixed(2)}
                     </p>
 
                     <button
