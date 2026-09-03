@@ -14,49 +14,56 @@ PRODUCTS = [
         "description": "Café espresso tradicional.",
         "price": 6.50,
         "category": "Cafés",
-        "barcode": "100001"
+        "barcode": "100001",
+        "image": "espresso.jpg",
     },
     {
         "name": "Espresso Duplo",
         "description": "Dose dupla de espresso.",
         "price": 8.50,
         "category": "Cafés",
-        "barcode": "100002"
+        "barcode": "100002",
+        "image": "espresso_duplo.jpg",
     },
     {
         "name": "Americano",
         "description": "Espresso com água quente.",
         "price": 7.50,
         "category": "Cafés",
-        "barcode": "100003"
+        "barcode": "100003",
+        "image": "americano.jpg",
     },
     {
         "name": "Cappuccino",
         "description": "Espresso com leite vaporizado.",
         "price": 12.90,
         "category": "Cafés",
-        "barcode": "100004"
+        "barcode": "100004",
+        "image": "cappuccino.jpg",
     },
     {
         "name": "Latte",
         "description": "Leite vaporizado e espresso.",
         "price": 13.90,
         "category": "Cafés",
-        "barcode": "100005"
+        "barcode": "100005",
+        "image": "latte.jpg",
     },
     {
         "name": "Mocha",
         "description": "Chocolate e espresso.",
         "price": 15.90,
         "category": "Cafés",
-        "barcode": "100006"
+        "barcode": "100006",
+        "image": "mocha.jpg",
     },
     {
         "name": "Macchiato",
         "description": "Espresso com espuma de leite.",
         "price": 11.90,
         "category": "Cafés",
-        "barcode": "100007"
+        "barcode": "100007",
+        "image": "macchiato.jpg",
     },
 
     # Bebidas
@@ -65,21 +72,24 @@ PRODUCTS = [
         "description": "Chocolate quente cremoso.",
         "price": 14.90,
         "category": "Bebidas Geladas",
-        "barcode": "100008"
+        "barcode": "100008",
+        "image": "chocolate_quente.jpg",
     },
     {
         "name": "Frappuccino",
         "description": "Café gelado batido.",
         "price": 17.90,
         "category": "Bebidas Geladas",
-        "barcode": "100009"
+        "barcode": "100009",
+        "image": "frappuccino.jpg",
     },
     {
         "name": "Café Gelado",
         "description": "Cold Brew.",
         "price": 13.90,
         "category": "Bebidas Geladas",
-        "barcode": "100010"
+        "barcode": "100010",
+        "image": "cafe_gelado.jpg",
     },
 
     # Chás
@@ -88,21 +98,24 @@ PRODUCTS = [
         "description": "Chá verde natural.",
         "price": 8.90,
         "category": "Chás",
-        "barcode": "100011"
+        "barcode": "100011",
+        "image": "cha_verde.jpg",
     },
     {
         "name": "Chá Preto",
         "description": "Chá preto.",
         "price": 8.90,
         "category": "Chás",
-        "barcode": "100012"
+        "barcode": "100012",
+        "image": "cha_preto.jpg",
     },
     {
         "name": "Chá de Camomila",
         "description": "Infusão de camomila.",
         "price": 8.90,
         "category": "Chás",
-        "barcode": "100013"
+        "barcode": "100013",
+        "image": "cha_camomila.jpg",
     },
 
     # Doces
@@ -111,35 +124,40 @@ PRODUCTS = [
         "description": "Brownie de chocolate.",
         "price": 9.90,
         "category": "Doces",
-        "barcode": "100014"
+        "barcode": "100014",
+        "image": "brownie.jpg",
     },
     {
         "name": "Cookie",
         "description": "Cookie artesanal.",
         "price": 7.90,
         "category": "Doces",
-        "barcode": "100015"
+        "barcode": "100015",
+        "image": "cookie.jpg",
     },
     {
         "name": "Cheesecake",
         "description": "Cheesecake tradicional.",
         "price": 15.90,
         "category": "Doces",
-        "barcode": "100016"
+        "barcode": "100016",
+        "image": "cheesecake.jpg",
     },
     {
         "name": "Donut",
         "description": "Donut recheado.",
         "price": 8.90,
         "category": "Doces",
-        "barcode": "100017"
+        "barcode": "100017",
+        "image": "donut.jpg",
     },
     {
         "name": "Croissant Doce",
         "description": "Croissant doce.",
         "price": 10.90,
         "category": "Doces",
-        "barcode": "100018"
+        "barcode": "100018",
+        "image": "croissant_doce.jpg",
     },
 
     # Salgados
@@ -148,35 +166,40 @@ PRODUCTS = [
         "description": "Tradicional mineiro.",
         "price": 6.90,
         "category": "Salgados",
-        "barcode": "100019"
+        "barcode": "100019",
+        "image": "pao_de_queijo.jpg",
     },
     {
         "name": "Croissant de Presunto",
         "description": "Croissant recheado.",
         "price": 12.90,
         "category": "Salgados",
-        "barcode": "100020"
+        "barcode": "100020",
+        "image": "croissant_presunto.jpg",
     },
     {
         "name": "Sanduíche Natural",
         "description": "Sanduíche de frango.",
         "price": 16.90,
         "category": "Salgados",
-        "barcode": "100021"
+        "barcode": "100021",
+        "image": "sanduiche_natural.jpg",
     },
     {
         "name": "Empada",
         "description": "Empada de frango.",
         "price": 8.90,
         "category": "Salgados",
-        "barcode": "100022"
+        "barcode": "100022",
+        "image": "empada.jpg",
     },
     {
         "name": "Quiche",
         "description": "Quiche de queijo.",
         "price": 11.90,
         "category": "Salgados",
-        "barcode": "100023"
+        "barcode": "100023",
+        "image": "quiche.jpg",
     },
 
     # Combos
@@ -185,14 +208,16 @@ PRODUCTS = [
         "description": "Espresso + Cookie.",
         "price": 13.90,
         "category": "Combos",
-        "barcode": "100024"
+        "barcode": "100024",
+        "image": "combo_cafe_cookie.jpg",
     },
     {
         "name": "Combo Cappuccino + Brownie",
         "description": "Cappuccino + Brownie.",
         "price": 21.90,
         "category": "Combos",
-        "barcode": "100025"
+        "barcode": "100025",
+        "image": "combo_cappuccino_brownie.jpg",
     },
 ]
 
@@ -568,7 +593,8 @@ PAYMENTS = [
         "external_id": None,
     },
     {
-        "order_index": 4,   # Diego Fernandes - Frappuccino, Donut (não concluído)
+        # Diego Fernandes - Frappuccino, Donut (não concluído)
+        "order_index": 4,
         "method": "PIX",
         "status": "REJECTED",
         "external_id": "PIX-9B2E7A11",
@@ -586,7 +612,8 @@ PAYMENTS = [
         "external_id": "PIX-3C6D9F02",
     },
     {
-        "order_index": 7,   # sem customer - Combo Café + Cookie (não concluído)
+        # sem customer - Combo Café + Cookie (não concluído)
+        "order_index": 7,
         "method": "CASH",
         "status": "PENDING",
         "external_id": None,

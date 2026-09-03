@@ -11,6 +11,9 @@ import random
 from datetime import timedelta
 from django.utils import timezone
 from apps.orders.services import finalize_order
+from django.core.files import File
+from pathlib import Path
+from django.conf import settings
 
 
 class Command(BaseCommand):
@@ -54,24 +57,48 @@ class Command(BaseCommand):
                     "stock_quantity": ingredient["stock_quantity"],
                     "unit": ingredient["unit"],
                     "minimum_stock": ingredient["minimum_stock"],
-                    }
-                )
-        self.stdout.write(
-            self.style.SUCCESS("Ingredientes criados!")
-            )
-
-    def seed_products(self) -> None:
-
-        for product in PRODUCTS:
-            Product.objects.get_or_create(
-                name=product["name"],
-                defaults={
-                    "description": product["description"],
-                    "price": product["price"],
-                    "category": Category.objects.get(name=product["category"]),
-                    "barcode": product["barcode"],
                 }
             )
+        self.stdout.write(
+            self.style.SUCCESS("Ingredientes criados!")
+        )
+
+    def seed_products(self) -> None:
+        media_path = Path(settings.MEDIA_ROOT) / "products"
+
+        for product_data in PRODUCTS:
+            product, created = Product.objects.get_or_create(
+                name=product_data["name"],
+                defaults={
+                    "description": product_data["description"],
+                    "price": product_data["price"],
+                    "category": Category.objects.get(
+                        name=product_data["category"]
+                    ),
+                    "barcode": product_data["barcode"],
+                }
+            )
+
+            image_name = product_data.get("image")
+
+            if image_name and not product.image:
+                image_path = media_path / image_name
+
+                if image_path.exists():
+                    with open(image_path, "rb") as image_file:
+                        product.image.save(
+                            image_name,
+                            File(image_file),
+                            save=True
+                        )
+
+                else:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"Imagem não encontrada: {image_path}"
+                        )
+                    )
+
         self.stdout.write(
             self.style.SUCCESS("Produtos criados!")
         )
@@ -97,7 +124,8 @@ class Command(BaseCommand):
                 product = Product.objects.get(name=product_name)
             except Product.DoesNotExist:
                 self.stdout.write(
-                    self.style.WARNING(f"Produto '{product_name}' não encontrado.")
+                    self.style.WARNING(
+                        f"Produto '{product_name}' não encontrado.")
                 )
                 continue
 
@@ -136,7 +164,7 @@ class Command(BaseCommand):
                 is_staff=user["is_staff"],
                 password=user["password"],
                 is_superuser=user["is_superuser"],
-                )
+            )
 
         self.stdout.write(
             self.style.SUCCESS("Usuários criados!")
@@ -161,7 +189,7 @@ class Command(BaseCommand):
             order = Order.objects.create(
                 customer=customer,
                 user=user,
-                is_completed=False,
+                is_completed=True,
             )
             quantity_products = random.randint(1, 5)
             chosen_products = random.sample(list(products),
@@ -178,8 +206,6 @@ class Command(BaseCommand):
             days = random.randint(0, 40)
             order.created_at = timezone.now() - timedelta(days=days)
             order.save(update_fields=["created_at"])
-            if random.choice([True, True, True, False]):
-                finalize_order(order)
 
         self.stdout.write(
             self.style.SUCCESS("Pedidos criados!")
