@@ -56,7 +56,8 @@ INSTALLED_APPS = [
     'django_filters',
     'drf_spectacular',
     'corsheaders',
-    'apps.coupons'
+    'apps.coupons',
+    'apps.ml',
 ]
 
 REST_FRAMEWORK = {
