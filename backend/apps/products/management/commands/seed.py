@@ -182,7 +182,7 @@ class Command(BaseCommand):
         users = User.objects.all()
         products = Product.objects.all()
 
-        for _ in range(500):
+        for _ in range(40):
             customer = random.choice(customers)
             user = random.choice(users)
 
