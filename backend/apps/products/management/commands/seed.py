@@ -81,17 +81,12 @@ class Command(BaseCommand):
 
             image_name = product_data.get("image")
 
-            if image_name and not product.image:
+            if image_name:
                 image_path = media_path / image_name
 
                 if image_path.exists():
-                    with open(image_path, "rb") as image_file:
-                        product.image.save(
-                            image_name,
-                            File(image_file),
-                            save=True
-                        )
-
+                    product.image.name = f"products/{image_name}"
+                    product.save(update_fields=["image"])
                 else:
                     self.stdout.write(
                         self.style.WARNING(
