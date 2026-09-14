@@ -18,6 +18,7 @@ services:
       - db
     volumes:
       - ./backend/media:/app/media
+      - ./backend/ml_models:/app/ml_models
     environment:
       DATABASE_URL: postgresql://cafeteria_user:cafeteria_password@db:5432/cafeteria_db
       SECRET_KEY: django-insecure-dev-secret-key

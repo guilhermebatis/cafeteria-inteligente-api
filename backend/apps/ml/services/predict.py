@@ -2,6 +2,7 @@ from apps.ml.services.sales_data import SalesDataService
 from apps.ml.services.features import SalesFeatureService
 import joblib
 import pandas as pd
+from django.conf import settings
 
 
 class PredictionService():
@@ -30,7 +31,8 @@ class PredictionService():
                      "rolling_mean_14"]]
         data = data.reset_index(drop=True)
 
-        model_data = joblib.load("/app/sales_model.joblib")
+        model_path = settings.BASE_DIR / "ml_models" / "sales_model.joblib"
+        model_data = joblib.load(model_path)
         model = model_data["model"]
         encoder = model_data["encoder"]
         product_data = pd.DataFrame({

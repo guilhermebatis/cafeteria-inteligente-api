@@ -4,6 +4,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 from apps.ml.services.sales_data import SalesDataService
 from apps.ml.services.features import SalesFeatureService
+from django.conf import settings
 
 
 class SalesModelTrainer:
@@ -67,11 +68,12 @@ class SalesModelTrainer:
     @staticmethod
     def save_model(model, encoder, filename="sales_model.joblib"):
         import joblib
+        model_path = settings.BASE_DIR / "ml_models" / filename
         ml = {
             "model": model,
             "encoder": encoder
         }
-        joblib.dump(ml, filename)
+        joblib.dump(ml, model_path)
 
     @staticmethod
     def run_training():
