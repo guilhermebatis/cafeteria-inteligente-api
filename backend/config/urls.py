@@ -23,6 +23,9 @@ urlpatterns = [
     path('api/', include('apps.products.urls')),
     path('api/', include('apps.coupons.urls')),
     path('api-auth/', include('rest_framework.urls')),
+
+    # ML
+    path('api/ml/', include('apps.ml.urls')),
 ]
 
 if settings.DEBUG:
