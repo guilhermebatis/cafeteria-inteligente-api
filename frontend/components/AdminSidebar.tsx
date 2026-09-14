@@ -120,6 +120,13 @@ export default function AdminSidebar() {
                 Clientes
             </Link>
 
+            <Link
+                href="/admin/ml"
+                className="border p-2 rounded"
+            >
+                Previsao de vendas
+            </Link>
+
             <button
                 onClick={handleSalesReport}
                 className="border p-2 rounded text-left cursor-pointer"
