@@ -4,6 +4,7 @@ from .models import (Product, Category, OrderItem, Order,
                      Payment, Customer)
 from django.contrib.auth.models import User
 from apps.coupons.serializers import CouponSerializer
+from django.templatetags.static import static
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -69,6 +70,21 @@ class ProductSerializer(serializers.ModelSerializer):
     )
 
     ingredients = ProductIngredientSerializer(many=True, read_only=True)
+
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, obj):
+        if not obj.image:
+            return None
+
+        image_url = static(obj.image.name)
+
+        request = self.context.get('request')
+
+        if request:
+            return request.build_absolute_uri(image_url)
+
+        return image_url
 
     class Meta:
         model = Product

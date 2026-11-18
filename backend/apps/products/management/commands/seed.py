@@ -14,6 +14,7 @@ from apps.orders.services import finalize_order
 from django.core.files import File
 from pathlib import Path
 from django.conf import settings
+from django.contrib.auth.models import Group, User
 
 
 class Command(BaseCommand):
@@ -148,21 +149,32 @@ class Command(BaseCommand):
         )
 
     def seed_users(self) -> None:
+
+        caixa_group, _ = Group.objects.get_or_create(name="Caixa")
+
         for user in USERS:
 
-            if User.objects.filter(username=user["username"]).exists():
-                continue
-
-            User.objects.create_user(
+            user_obj, created = User.objects.get_or_create(
                 username=user["username"],
-                email=user["email"],
-                is_staff=user["is_staff"],
-                password=user["password"],
-                is_superuser=user["is_superuser"],
+                defaults={
+                    "email": user["email"],
+                    "is_staff": False,
+                    "is_superuser": False,
+                }
             )
 
+            if created:
+                user_obj.set_password(user["password"])
+
+            user_obj.email = user["email"]
+            user_obj.is_staff = False
+            user_obj.is_superuser = False
+            user_obj.save()
+
+            user_obj.groups.set([caixa_group])
+
         self.stdout.write(
-            self.style.SUCCESS("Usuários criados!")
+            self.style.SUCCESS("Usuários criados/atualizados!")
         )
 
     def seed_orders(self) -> None:

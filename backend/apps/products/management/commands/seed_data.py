@@ -555,14 +555,14 @@ USERS = [
         "username": "caixa1",
         "email": "caixa1@example.com",
         "password": "caixa123",
-        "is_staff": True,
+        "is_staff": False,
         "is_superuser": False
     },
     {
         "username": "caixa2",
         "email": "caixa2@example.com",
         "password": "caixa123",
-        "is_staff": True,
+        "is_staff": False,
         "is_superuser": False
     },
 ]
